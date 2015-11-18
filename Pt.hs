@@ -22,6 +22,12 @@ ptRowLoop row col =
 ptRow :: Int -> [Int]
 ptRow row = ptRowLoop row row
 
+ptRows :: Int -> [[Int]]
+ptRows 0 = [ptRowLoop 0 0]
+ptRows row = 
+    ptRows (row-1) ++ [ptRowLoop row row]
+        
+
 
 -- main' = do
     -- input <- readLine :: IO Int
