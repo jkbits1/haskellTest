@@ -75,3 +75,14 @@ isOdd2b a = num2Bool (isOdd2 a)
 
 isOdd2ba :: Integer -> Bool
 isOdd2ba = num2Bool . isOdd2
+
+subjects = [("Combin L", "schonfinkel curry"), ("Curry-How corr", "correspondence")]
+
+subjectTitle :: (t, t1) -> t
+subjectTitle (title, _) = title
+
+subjectDesc :: (t, t1) -> t1
+subjectDesc  (_, desc)  = desc
+
+filterSync :: Eq a => a -> (a, b) -> Bool
+filterSync title subj = title == subjectTitle subj
