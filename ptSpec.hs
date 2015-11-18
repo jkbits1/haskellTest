@@ -30,7 +30,7 @@ main = hspec $ do
             ptRow 2 `shouldBe` ([1, 2, 1])
             
     describe "pt2Out" $ do
-        it "returns \"1 3 3 1\"] when given 3" $ do
+        it "returns [\"1 3 3 1\"] when given 3" $ do
             pt2Out 3 `shouldBe` ("1 3 3 1")
             
     describe "pt2OutLines" $ do
@@ -39,3 +39,9 @@ main = hspec $ do
             
         it "returns [\"1\", \"2\", \"1\"] when given 2" $ do
             pt2OutLines 2 `shouldBe` (["1", "2", "1"])            
+            
+    describe "pt2OutRows" $ do
+        it "returns [\"1\", \"1 1\", \"1 2 1\"] when given 2" $ do
+            pt2OutRows 2 `shouldBe` (["1", "1 1", "1 2 1"])
+            
+            
