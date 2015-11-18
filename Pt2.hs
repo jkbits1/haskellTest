@@ -6,15 +6,17 @@ import Pt
 -- fac 0 = 1
 -- fac n = fac (n-1) * n
 
+-- pt2Out n = unlines $ (map show . ptRow) $ n
+
 pt2Out :: Int -> String
-pt2Out n = unlines $ (map show . ptRow) $ fac n
+pt2Out n = unwords $ (map show . ptRow) $ n
 
 pt2OutLines :: Int -> [String]
-pt2OutLines n = (map show . ptRow) $ fac n
+pt2OutLines n = (map show . ptRow) $ n
 
--- mainX = do
-    -- input <- readLn :: IO Int
-    -- putStrLn $ pt2Out input
+mainX = do
+    input <- readLn :: IO Int
+    putStrLn $ pt2Out input
 
 -- main = do
     -- input <- readLn :: IO Int
