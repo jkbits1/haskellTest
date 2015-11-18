@@ -10,8 +10,8 @@ fac n = fac (n-1) * n
 pt :: Int -> Int -> Int
 pt row col = (fac row) `div` ((fac col) * fac(row -col))
 
-pt2 :: Int -> Int
-pt2 row = (fac row) 
+-- pt2 :: Int -> Int
+-- pt2 row = (fac row) 
     -- `div` ((fac col) * fac(row -col))
     
 ptRowLoop :: Int -> Int -> [Int]
@@ -20,7 +20,6 @@ ptRowLoop row col =
     [pt row col] ++ ptRowLoop row (col-1)
 
 ptRow :: Int -> [Int]
--- ptRow row = [fac row]
 ptRow row = ptRowLoop row row
 
 
