@@ -23,6 +23,15 @@ main = hspec $ do
         it "returns [1] when given 0" $ do
             ptRow 0 `shouldBe` ([1])
             
+        it "returns [1, 1] when given 1" $ do
+            ptRow 1 `shouldBe` ([1, 1])
+            
+        it "returns [1, 2, 1] when given 2" $ do
+            ptRow 2 `shouldBe` ([1, 2, 1])
+            
     describe "pt2OutLines" $ do
-        it "returns [\"1\"] when given 1" $ do
-            pt2OutLines 1 `shouldBe` (["1"])
+        it "returns [\"1\", \"1\"] when given 1" $ do
+            pt2OutLines 1 `shouldBe` (["1", "1"])
+            
+        it "returns [\"1\", \"2\",\"1\"] when given 2" $ do
+            pt2OutLines 2 `shouldBe` (["1", "2", "1"])            

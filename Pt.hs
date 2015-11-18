@@ -13,9 +13,15 @@ pt row col = (fac row) `div` ((fac col) * fac(row -col))
 pt2 :: Int -> Int
 pt2 row = (fac row) 
     -- `div` ((fac col) * fac(row -col))
+    
+ptRowLoop :: Int -> Int -> [Int]
+ptRowLoop row 0 = [pt row 0]
+ptRowLoop row col = 
+    [pt row col] ++ ptRowLoop row (col-1)
 
 ptRow :: Int -> [Int]
-ptRow row = [fac row]
+-- ptRow row = [fac row]
+ptRow row = ptRowLoop row row
 
 
 -- main' = do
