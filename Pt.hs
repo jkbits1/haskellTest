@@ -5,7 +5,6 @@ import System.Console.Haskeline
 
 fac :: Int -> Int
 fac 0 = 1
-
 fac n = fac (n-1) * n
 
 pt :: Int -> Int -> Int
@@ -13,7 +12,10 @@ pt row col = (fac row) `div` ((fac col) * fac(row -col))
 
 pt2 :: Int -> Int
 pt2 row = (fac row) 
--- `div` ((fac col) * fac(row -col))
+    -- `div` ((fac col) * fac(row -col))
+
+ptRow :: Int -> [Int]
+ptRow row = [fac row]
 
 
 -- main' = do

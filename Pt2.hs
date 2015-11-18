@@ -1,17 +1,16 @@
 module Pt2 where
 
-fac :: Int -> Int
-fac 0 = 1
-fac n = fac (n-1) * n
+import Pt
 
-pt2 :: Int -> [Int]
-pt2 row = [fac row]
+-- fac :: Int -> Int
+-- fac 0 = 1
+-- fac n = fac (n-1) * n
 
 pt2Out :: Int -> String
-pt2Out n = unlines $ (map show . pt2) $ fac n
+pt2Out n = unlines $ (map show . ptRow) $ fac n
 
 pt2OutLines :: Int -> [String]
-pt2OutLines n = (map show . pt2) $ fac n
+pt2OutLines n = (map show . ptRow) $ fac n
 
 -- mainX = do
     -- input <- readLn :: IO Int
