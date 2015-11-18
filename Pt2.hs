@@ -11,6 +11,9 @@ import Pt
 pt2Out :: Int -> String
 pt2Out n = unwords $ (map show . ptRow) $ n
 
+pt2OutRows :: Int -> [String]
+pt2OutRows n = unwords $ (map show . ptRows) $ n
+
 pt2OutLines :: Int -> [String]
 pt2OutLines n = (map show . ptRow) $ n
 
