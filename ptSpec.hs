@@ -44,4 +44,7 @@ main = hspec $ do
         it "returns [\"1\", \"1 1\", \"1 2 1\"] when given 2" $ do
             pt2OutRows 2 `shouldBe` (["1", "1 1", "1 2 1"])
             
+    describe "pt2OutRowsString" $ do
+        it "returns \"1 \n1 1\n1 2 1\n\" when given 2" $ do
+            pt2OutRowsString 2 `shouldBe` ("1\n1 1\n1 2 1\n")
             
