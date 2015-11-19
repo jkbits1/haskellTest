@@ -8,27 +8,29 @@ import Pt
 
 -- pt2Out n = unlines $ (map show . ptRow) $ n
 
-ptRowAsString :: [Int] -> String
-ptRowAsString xs = unwords $ map show xs
 
 pt2Out :: Int -> String
 pt2Out n = ptRowAsString $ ptRow n
 -- pt2Out n = unwords $ (map show . ptRow) $ n
 
--- ShowList ShowS
-
-pt2OutRows :: Int -> [String]
-pt2OutRows n = map ptRowAsString $ ptRows n
--- pt2OutRows n = unwords $ (map show . ptRows) $ n
-
-pt2OutRowsString n = unlines $ pt2OutRows n
-
 pt2OutLines :: Int -> [String]
 pt2OutLines n = (map show . ptRow) $ n
 
+-- ShowList ShowS
+
+-- pt2OutRows n = unwords $ (map show . ptRows) $ n
+pt2OutRows :: Int -> [String]
+pt2OutRows n = map ptRowAsString $ ptRows n
+
+ptRowAsString :: [Int] -> String
+ptRowAsString xs = unwords $ map show xs
+
+pt2OutRowsString :: Int -> String
+pt2OutRowsString n = unlines $ pt2OutRows n
+
 mainX = do
     input <- readLn :: IO Int
-    putStrLn $ pt2Out input
+    putStrLn $ pt2OutRowsString input
 
 -- main = do
     -- input <- readLn :: IO Int
