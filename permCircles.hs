@@ -37,8 +37,8 @@ appendTwoListPerms thr = map (\xs ->  xs ++ [thr]) createTwoListPerms
 --[ [[1,2,3],[4,5,6],[7,8,9]], [[1,2,3],[5,4,6],[7,8,9]] ...]
 
 -- !! meets answer level
-createThreeListPerms :: [[[[Int]]]]
-createThreeListPerms = map appendTwoListPerms thrPerms
+createThreeListPerms :: [[[Int]]]
+createThreeListPerms = concat $ map appendTwoListPerms thrPerms
 -- result -
 --[
 --[ [[1,2,3],[4,5,6],[7,8,9]],  [[1,2,3],[5,4,6],[7,8,9]] ... ],
@@ -49,6 +49,27 @@ createThreeListPerms = map appendTwoListPerms thrPerms
 --twoRings :: [Int] -> [Int] -> [[Int], [Int]]
 --twoRings inner second =
 
+sumTuple :: (Int, Int, Int) -> Int
+sumTuple (a, b, c) = a + b + c
+
+sumLists :: [[Int]] -> [Int]
+sumLists lists =
+    let list1   = head lists
+        list2   = head $ drop 1 lists
+        list3   = head $ drop 2 lists
+        tups    = zip3 list1 list2 list3
+        sum1    = sumTuple $ head $ tups
+        sum2    = sumTuple $ head $ drop 1 tups
+        sum3    = sumTuple $ head $ drop 2 tups
+    in
+--        [list1, list2, list3]
+        [sum1, sum2, sum3]
+
+answersPerms :: [[Int]]
+answersPerms = map sumLists createThreeListPerms
+
+--findSpecificAnswer = filter (\xs -> xs == [12, 15, 18]) answersPerms
+findSpecificAnswer = filter (\xs -> xs == [13, 14, 18]) answersPerms
 
 inStr = "abc"
 secStr = "def"
