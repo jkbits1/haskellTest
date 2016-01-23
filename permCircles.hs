@@ -1,9 +1,16 @@
 
 import Data.List
 
-inner =     [1,2,3]
-second =    [4,5,6]
-three =     [7,8,9]
+--inner =     [1,2,3]
+--second =    [4,5,6]
+--three =     [7,8,9]
+
+inner =     [6, 5, 5, 6, 5, 4, 5, 4]
+second =    [4, 2, 2, 2, 4, 3, 3, 1]
+three =     [1, 3, 2, 3, 3, 2, 4, 3]
+
+answers = [12, 8, 12, 10, 10, 12, 10, 8]
+
 
 wheelPerms :: [Int] -> [[Int]]
 wheelPerms xs = permutations xs
