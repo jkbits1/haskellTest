@@ -128,6 +128,30 @@ findSpecificAnswer = filter (\xs -> xs == answers)
     $ concat $ answersPerms
 
 
+sumPlusLists :: [[Int]] -> [([Int], [[Int]])]
+sumPlusLists lists =
+    let list1   = head lists
+        list2   = head $ drop 1 lists
+        list3   = head $ drop 2 lists
+        tups    = zip3 list1 list2 list3
+    in
+--        map sumTuple tups
+--        [(tups, lists)]
+        [(map sumTuple tups, lists)]
+
+answersPlusList :: [([Int], [[Int]])]
+answersPlusList = concat $ map sumPlusLists createThreeListPerms
+
+answersPermsLoop2 :: ([Int], t) -> ([[Int]], t)
+answersPermsLoop2 (ans, lists) = (wheelPerms ans, lists)
+
+answersPermsPlusList :: [([[Int]], [[Int]])]
+answersPermsPlusList = map answersPermsLoop2 answersPlusList
+
+-- this should find the solution
+findSpecificAnswerPlusList :: [([[Int]], [[Int]])]
+findSpecificAnswerPlusList =
+    filter (\(ans, lists) -> elem answers ans) answersPermsPlusList
 
 
 
