@@ -11,9 +11,18 @@ three =     [1, 3, 2, 3, 3, 2, 4, 3]
 
 answers = [12, 8, 12, 10, 10, 12, 10, 8]
 
+listLoopItem list chunk = (drop chunk list) ++ (take chunk list)
+
+createListLoops :: [[Int]] -> [Int] -> Int -> [[Int]]
+createListLoops lists seed 0 = lists ++ [seed]
+createListLoops lists seed count =
+    createListLoops
+        (lists ++ [(listLoopItem seed count)])
+        seed (count-1)
 
 wheelPerms :: [Int] -> [[Int]]
-wheelPerms xs = permutations xs
+--wheelPerms xs = permutations xs
+wheelPerms xs = createListLoops [] xs $ (length xs) - 1
 
 secPerms :: [[Int]]
 secPerms = wheelPerms second
@@ -37,13 +46,50 @@ createTwoListPerms = map attachInnerList secPerms
 -- result - [ [[1,2,3], [4,5,6]],
 --            [[1,2,3], [5,6,4]], ...]
 
+-- given two wheels perms and actual answer, create list of diffs
+-- create perms of last wheel, then iterate through diffs for a match
+
+sumTwoTuple :: (Int, Int) -> Int
+sumTwoTuple (a, b) = a + b
+
+sumTwoLists :: [[Int]] -> [Int]
+sumTwoLists lists =
+    let list1   = head lists
+        list2   = head $ drop 1 lists
+        tups    = zip list1 list2
+    in
+        map (\(x, y) -> x + y) tups
+
+summedTwoLists :: [[Int]]
+summedTwoLists = map sumTwoLists createTwoListPerms
+
+minusTwoTuple :: (Int, Int) -> Int
+minusTwoTuple  (a, b) = b - a
+
+--candidates = map (\xs -> ) summedTwoLists
+
+createCandidate list =
+    let tuples = zip list answers
+    in
+--        tuples
+        map (\t -> minusTwoTuple t) tuples
+
+candidates = map createCandidate summedTwoLists
+
+--elem
+--test with default three exisitn in perms of three
+
+
+
 appendTwoListPerms :: [Int] -> [[[Int]]]
 appendTwoListPerms thr = map (\xs ->  xs ++ [thr]) createTwoListPerms
 -- param = [7,8,9]
 -- xs = [[Int]]
 --[ [[1,2,3],[4,5,6],[7,8,9]], [[1,2,3],[5,4,6],[7,8,9]] ...]
 
--- !! meets answer level
+
+
+-- !! meets answer level, but overloads memory
 createThreeListPerms :: [[[Int]]]
 createThreeListPerms = concat $ map appendTwoListPerms thrPerms
 -- result -
@@ -65,18 +111,25 @@ sumLists lists =
         list2   = head $ drop 1 lists
         list3   = head $ drop 2 lists
         tups    = zip3 list1 list2 list3
-        sum1    = sumTuple $ head $ tups
-        sum2    = sumTuple $ head $ drop 1 tups
-        sum3    = sumTuple $ head $ drop 2 tups
     in
---        [list1, list2, list3]
-        [sum1, sum2, sum3]
+        map sumTuple tups
 
-answersPerms :: [[Int]]
-answersPerms = map sumLists createThreeListPerms
+answersList :: [[Int]]
+answersList = map sumLists createThreeListPerms
 
---findSpecificAnswer = filter (\xs -> xs == [12, 15, 18]) answersPerms
-findSpecificAnswer = filter (\xs -> xs == [13, 14, 18]) answersPerms
+answersPermsLoop :: [Int] -> [[Int]]
+answersPermsLoop xs = wheelPerms xs
+
+answersPerms :: [[[Int]]]
+answersPerms = map answersPermsLoop answersList
+
+findSpecificAnswer :: [[Int]]
+findSpecificAnswer = filter (\xs -> xs == answers)
+    $ concat $ answersPerms
+
+
+
+
 
 inStr = "abc"
 secStr = "def"
