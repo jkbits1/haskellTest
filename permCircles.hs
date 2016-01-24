@@ -17,11 +17,9 @@ createListLoops :: [[Int]] -> [Int] -> Int -> [[Int]]
 createListLoops lists seed 0 = lists ++ [seed]
 createListLoops lists seed count =
     createListLoops
-        (lists ++ [(listLoopItem seed count)])
-        seed (count-1)
+        (lists ++ [listLoopItem seed count]) seed (count-1)
 
 wheelPerms :: [Int] -> [[Int]]
---wheelPerms xs = permutations xs
 wheelPerms xs = createListLoops [] xs $ (length xs) - 1
 
 secPerms :: [[Int]]
@@ -41,16 +39,18 @@ attachInnerList = attachLists inner
 -- param - [4,5,6]
 -- result - [ [1,2,3], [4,5,6] ]
 
-createTwoListPerms :: [[[Int]]]
-createTwoListPerms = map attachInnerList secPerms
+twoListPerms :: [[[Int]]]
+twoListPerms = map attachInnerList secPerms
 -- result - [ [[1,2,3], [4,5,6]],
 --            [[1,2,3], [5,6,4]], ...]
 
 -- given two wheels perms and actual answer, create list of diffs
 -- create perms of last wheel, then iterate through diffs for a match
 
-sumTwoTuple :: (Int, Int) -> Int
-sumTwoTuple (a, b) = a + b
+--addTuple :: (Int, Int) -> Int
+--addTuple (a, b) = a + b
+minusTuple :: (Int, Int) -> Int
+minusTuple  (a, b) = b - a
 
 sumTwoLists :: [[Int]] -> [Int]
 sumTwoLists lists =
@@ -61,35 +61,25 @@ sumTwoLists lists =
         map (\(x, y) -> x + y) tups
 
 summedTwoLists :: [[Int]]
-summedTwoLists = map sumTwoLists createTwoListPerms
-
-minusTwoTuple :: (Int, Int) -> Int
-minusTwoTuple  (a, b) = b - a
-
---candidates = map (\xs -> ) summedTwoLists
+summedTwoLists = map sumTwoLists twoListPerms
 
 createCandidate list =
     let tuples = zip list answers
     in
---        tuples
-        map (\t -> minusTwoTuple t) tuples
+        map (\t -> minusTuple t) tuples
 
 candidates = map createCandidate summedTwoLists
 
---elem
---test with default three exisitn in perms of three
-
-
 
 appendTwoListPerms :: [Int] -> [[[Int]]]
-appendTwoListPerms thr = map (\xs ->  xs ++ [thr]) createTwoListPerms
+appendTwoListPerms thr = map (\xs ->  xs ++ [thr]) twoListPerms
 -- param = [7,8,9]
 -- xs = [[Int]]
 --[ [[1,2,3],[4,5,6],[7,8,9]], [[1,2,3],[5,4,6],[7,8,9]] ...]
 
 
-
--- !! meets answer level, but overloads memory
+-- meets answer level, but overloads memory.
+-- fixed by using loop instead of permutations
 createThreeListPerms :: [[[Int]]]
 createThreeListPerms = concat $ map appendTwoListPerms thrPerms
 -- result -
@@ -99,20 +89,19 @@ createThreeListPerms = concat $ map appendTwoListPerms thrPerms
 -- ...
 --]
 
---twoRings :: [Int] -> [Int] -> [[Int], [Int]]
---twoRings inner second =
+sumTriple :: (Int, Int, Int) -> Int
+sumTriple (a, b, c) = a + b + c
 
-sumTuple :: (Int, Int, Int) -> Int
-sumTuple (a, b, c) = a + b + c
-
-sumLists :: [[Int]] -> [Int]
-sumLists lists =
+tuplesFromLists :: [[Int]] -> [(Int, Int, Int)]
+tuplesFromLists lists =
     let list1   = head lists
         list2   = head $ drop 1 lists
         list3   = head $ drop 2 lists
-        tups    = zip3 list1 list2 list3
     in
-        map sumTuple tups
+        zip3 list1 list2 list3
+
+sumLists :: [[Int]] -> [Int]
+sumLists lists = map sumTriple $ tuplesFromLists lists
 
 answersList :: [[Int]]
 answersList = map sumLists createThreeListPerms
@@ -124,20 +113,11 @@ answersPerms :: [[[Int]]]
 answersPerms = map answersPermsLoop answersList
 
 findSpecificAnswer :: [[Int]]
-findSpecificAnswer = filter (\xs -> xs == answers)
-    $ concat $ answersPerms
-
+findSpecificAnswer =
+    filter (\xs -> xs == answers) $ concat $ answersPerms
 
 sumPlusLists :: [[Int]] -> [([Int], [[Int]])]
-sumPlusLists lists =
-    let list1   = head lists
-        list2   = head $ drop 1 lists
-        list3   = head $ drop 2 lists
-        tups    = zip3 list1 list2 list3
-    in
---        map sumTuple tups
---        [(tups, lists)]
-        [(map sumTuple tups, lists)]
+sumPlusLists lists = [(map sumTriple $ tuplesFromLists lists, lists)]
 
 answersPlusList :: [([Int], [[Int]])]
 answersPlusList = concat $ map sumPlusLists createThreeListPerms
@@ -148,11 +128,14 @@ answersPermsLoop2 (ans, lists) = (wheelPerms ans, lists)
 answersPermsPlusList :: [([[Int]], [[Int]])]
 answersPermsPlusList = map answersPermsLoop2 answersPlusList
 
--- this should find the solution
+-- this finds the solution
 findSpecificAnswerPlusList :: [([[Int]], [[Int]])]
 findSpecificAnswerPlusList =
     filter (\(ans, lists) -> elem answers ans) answersPermsPlusList
 
+-- display solution
+displaySpecificAnswers =
+    snd $ head findSpecificAnswerPlusList
 
 
 inStr = "abc"
