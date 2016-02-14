@@ -174,8 +174,8 @@ findAnswerLazy = [ i | i <- [1..512], let ans = elem (getWheelsPermTotals i) ans
 findAnswerLazy2 = take 1 [ i | i <- [1..], let ans = elem (getWheelsPermTotals i) ansPerms, ans == True]
 
 -- this is list comprehension rewritten, and is efficient. however, it does go through
--- entire sets of perms several times
--- ?? how to rewrite this in a lazy eval method? does a take x at each stage help?
+-- entire sets of perms several times NOTE: MAYBE NOT, see fns below
+-- ?? how to rewrite this in a lazy eval method? does a take x at each stage help? or not needed
 --      may have to merge stages etc
 -- ?? how to rewrite list comp in a lazy eval method?
 findAnswerLazy3 =
@@ -183,12 +183,29 @@ findAnswerLazy3 =
     ansH = head $
      map (\(i, _) -> i) $
           filter (\(i, b) -> b == True) $
-            map (\i -> (i, elem (getWheelsPermTotals i) ansPerms)) [1..512]
--- ans == True]
-  in
+             map (\i -> (i, elem (getWheelsPermTotals i) ansPerms)) [1..512]
+--                                                                  NOTE: [1..] works too,
+--                                                                        proves is lazy eval
+   in
     threeWheelsPermsItemByCounter $ getCounter ansH
 
+-- expected this to work
+testInf0 = [1..]
+testLazy0 = take 1 $ testInf0
+
+-- wasn't sure, but this worked
+testInf = map (\x -> x+ 1) [1..]
+testLazy = take 1 $ testInf
+
+--didn't expect this to work, but it does
+testInf2 = filter (\y -> y > 5) $ map (\x -> x+ 1) [1..]
+testLazy2 = take 1 $ testInf2
+testLazy2a = head $ testInf2
+
+
 --tail-recursion version
+
+
 
 
 --
