@@ -30,6 +30,10 @@ thrPerms :: [[Int]]
 thrPerms = wheelPerms three
 -- [ [7,8,9], [8,9,7] ... ]
 
+-- NOTE - used for lazy eval only
+ansPerms :: [[Int]]
+ansPerms = wheelPerms answers
+
 twoListPerms :: [[[Int]]]
 twoListPerms = map (\sec -> inner : sec : []) secPerms
 --twoListPerms = map attachInnerList secPerms
@@ -131,13 +135,52 @@ getCounter x =
 wheelPermsItem :: Int -> [[Int]] -> [Int]
 wheelPermsItem idx xs = head $ drop (idx) xs
 
-threeWheelsPermsItemByCounter counter =
+threeWheelsPermsItemByCounter (_, counter) =
   let
-    s_idx = head counter
+    sec_idx = head counter
+    thr_idx = head $ drop 1 counter
+    ans_idx = head $ drop 2 counter
    in
-    [
-      inner : [wheelPermsItem s_idx secPerms]
-    ]
+    [inner]
+    ++
+      [wheelPermsItem sec_idx secPerms] ++
+      [wheelPermsItem thr_idx thrPerms]
+--      ++ [wheelPermsItem ans_idx ansPerms]
+
+wheelsTuple xxs =
+  let
+    inn = head xxs
+    sec = head $ drop 1 xxs
+    thr = head $ drop 2 xxs
+  in
+    zip3 inn sec thr
+
+getWheelsPermTotals :: Int -> [Int]
+getWheelsPermTotals n =
+  map sumTriple $ wheelsTuple $ threeWheelsPermsItemByCounter $ getCounter n
+
+
+-- elem (getWheelsPermTotals 120) ansPerms
+
+-- NOTE: the fns below don't stop at the answer, but won't blow out stack
+
+--NOTE <- is a generator
+findAnswerLazy = [ i | i <- [1..512], let ans = elem (getWheelsPermTotals i) ansPerms, ans == True]
+
+-- gets first true result, but otherwise has no stopping condition
+findAnswerLazy2 = take 1 [ i | i <- [1..], let ans = elem (getWheelsPermTotals i) ansPerms, ans == True]
+
+findAnswerLazy3 =
+  let
+    ansH = head $
+     map (\(i, _) -> i) $
+          filter (\(i, b) -> b == True) $
+            map (\i -> (i, elem (getWheelsPermTotals i) ansPerms)) [1..512]
+-- ans == True]
+  in
+    threeWheelsPermsItemByCounter $ getCounter ansH
+
+
 
 --
 --PREPARATORY WORK
