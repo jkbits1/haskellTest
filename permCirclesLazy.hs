@@ -162,14 +162,22 @@ getWheelsPermTotals n =
 
 -- elem (getWheelsPermTotals 120) ansPerms
 
--- NOTE: the fns below don't stop at the answer, but won't blow out stack
+--NOTE: Are probs above issues of stack or memory?
 
---NOTE <- is a generator
+--NOTE: type of stack-efficient solutions - whether tail recursion etc
+-- NOTE: efficient, but not lazy - fn doesn't stop at the answer, but won't blow out stack
+-- NOTE <- is a generator
 findAnswerLazy = [ i | i <- [1..512], let ans = elem (getWheelsPermTotals i) ansPerms, ans == True]
 
+-- NOTE: Lazy
 -- gets first true result, but otherwise has no stopping condition
 findAnswerLazy2 = take 1 [ i | i <- [1..], let ans = elem (getWheelsPermTotals i) ansPerms, ans == True]
 
+-- this is list comprehension rewritten, and is efficient. however, it does go through
+-- entire sets of perms several times
+-- ?? how to rewrite this in a lazy eval method? does a take x at each stage help?
+--      may have to merge stages etc
+-- ?? how to rewrite list comp in a lazy eval method?
 findAnswerLazy3 =
   let
     ansH = head $
@@ -180,6 +188,7 @@ findAnswerLazy3 =
   in
     threeWheelsPermsItemByCounter $ getCounter ansH
 
+--tail-recursion version
 
 
 --
