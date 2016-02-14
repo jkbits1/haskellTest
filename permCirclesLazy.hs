@@ -1,5 +1,6 @@
 
 import Data.List
+import Numeric
 
 -- test data that is easier to visualise and debug
 --inner =     [1,2,3]
@@ -89,14 +90,54 @@ displaySpecificAnswers =
 
 -- Lazy
 
+-- | Returns the digits of a positive integer as a list, in reverse order.
+--   This is slightly more efficient than in forward order.
+digitsRev :: Integral n
+    => n -- ^ The base to use.
+    -> n -- ^ The number to convert to digit form.
+    -> [n] -- ^ The digits of the number in list form, in reverse.
+digitsRev base i = case i of
+        0 -> []
+        _ -> lastDigit : digitsRev base rest
+    where (rest, lastDigit) = quotRem i base
+
+-- | Returns the digits of a positive integer as a list.
+digits :: Integral n
+    => n -- ^ The base to use (typically 10).
+    -> n -- ^ The number to convert to digit form.
+    -> [n] -- ^ The digits of the number in list form.
+digits base = reverse . digitsRev base
+
 --counter/state (each digit up to 7)
 initCounter = [0,0,0]
 
 incrementCounter = [0,0,0]
 
+getCounter :: Int -> (Int, [Int])
+getCounter x =
+  case x >= 512 of
+    True -> getCounter 0
+    False ->
+      let
+        xs = digits 8 x
+      in
+        case length xs of
+          0 -> (x, [0,0,0])
+          1 -> (x, [0,0] ++ xs)
+          2 -> (x, [0] ++ xs)
+          otherwise -> (x, xs)
+
+
 wheelPermsItem :: Int -> [[Int]] -> [Int]
 wheelPermsItem idx xs = head $ drop (idx) xs
 
+threeWheelsPermsItemByCounter counter =
+  let
+    s_idx = head counter
+   in
+    [
+      inner : [wheelPermsItem s_idx secPerms]
+    ]
 
 --
 --PREPARATORY WORK
