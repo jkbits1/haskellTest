@@ -13,30 +13,37 @@ three =     [1, 3, 2, 3, 3, 2, 4, 3]
 
 answers = [12, 8, 12, 10, 10, 12, 10, 8]
 
-listLoopItem list chunk = (drop chunk list) ++ (take chunk list)
+type WheelPosition    = [Int]
+type WheelLoop        = [WheelPosition]
+type LoopsPermutation = [WheelPosition]
+type LoopsPermColumn  = (Int, Int, Int)
+type LoopsPermAnswers = [Int]
 
-listLoops :: [[Int]] -> [Int] -> Int -> [[Int]]
-listLoops lists seed 0 = lists ++ [seed]
-listLoops lists seed count = listLoops (lists ++ [listLoopItem seed count]) seed (count-1)
+turnWheel :: WheelPosition -> Int -> WheelPosition
+turnWheel wheel chunk = (drop chunk wheel) ++ (take chunk wheel)
 
-wheelPerms :: [Int] -> [[Int]]
-wheelPerms xs = listLoops [] xs $ (length xs) - 1
+getWheelLoop :: [WheelPosition] -> WheelPosition -> Int -> WheelLoop
+getWheelLoop positions pos 0 = positions ++ [pos]
+getWheelLoop positions pos count = getWheelLoop (positions ++ [turnWheel pos count]) pos (count-1)
 
-secPerms :: [[Int]]
-secPerms = wheelPerms second
+createWheelLoop :: WheelPosition -> WheelLoop
+createWheelLoop xs = getWheelLoop [] xs $ (length xs) - 1
+
+secLoop :: WheelLoop
+secLoop = createWheelLoop second
 -- [ [4,5,6], [5,6,4] ... ]
 
-thrPerms :: [[Int]]
-thrPerms = wheelPerms three
+thrLoop :: WheelLoop
+thrLoop = createWheelLoop three
 -- [ [7,8,9], [8,9,7] ... ]
 
--- NOTE - used for lazy eval only
-ansPerms :: [[Int]]
-ansPerms = wheelPerms answers
+-- NOTE - used for revised first solution and lazy eval solution
+ansLoop :: WheelLoop
+ansLoop = createWheelLoop answers
 
-twoListPerms :: [[[Int]]]
-twoListPerms = map (\sec -> inner : sec : []) secPerms
---twoListPerms = map attachInnerList secPerms
+twoWheelPerms :: [LoopsPermutation]
+twoWheelPerms = map (\sec -> inner : sec : []) secLoop
+--twoWheelPerms = map attachInnerList secLoop
 -- result - [ [[1,2,3], [4,5,6]],
 --            [[1,2,3], [5,6,4]], ...]
 
@@ -45,42 +52,43 @@ twoListPerms = map (\sec -> inner : sec : []) secPerms
 minusTuple :: (Int, Int) -> Int
 minusTuple  (a, b) = b - a
 
-appendTwoListPerms :: [Int] -> [[[Int]]]
-appendTwoListPerms thr = map (\xs ->  xs ++ [thr]) twoListPerms
+appendTwoWheelPerms :: WheelPosition -> [LoopsPermutation]
+appendTwoWheelPerms thrPos =
+  map (\twoLoopPerm ->  twoLoopPerm ++ [thrPos]) twoWheelPerms
 -- param = [7,8,9]
 -- xs = [[Int]]
 --[ [[1,2,3],[4,5,6],[7,8,9]], [[1,2,3],[5,4,6],[7,8,9]] ...]
 
-threeListPerms :: [[[Int]]]
-threeListPerms = concat $ map appendTwoListPerms thrPerms
+threeWheelPerms :: [LoopsPermutation]
+threeWheelPerms = concat $ map appendTwoWheelPerms thrLoop
 -- result -
 -- [ [[1,2,3],[4,5,6],[7,8,9]],  [[1,2,3],[5,4,6],[7,8,9]] ...,
 --   [[1,2,3],[4,5,6],[8,7,9]],  [[1,2,3],[5,4,6],[8,7,9]] ... ]
 
-sumTriple :: (Int, Int, Int) -> Int
+sumTriple :: LoopsPermColumn -> Int
 sumTriple (a, b, c) = a + b + c
 
-tuplesFromLists :: [[Int]] -> [(Int, Int, Int)]
-tuplesFromLists lists =
-    let list1   = head lists
-        list2   = head $ drop 1 lists
-        list3   = head $ drop 2 lists
+columnsFromPerm :: LoopsPermutation -> [LoopsPermColumn]
+columnsFromPerm perm =
+    let firstPos  = head perm
+        secPos    = head $ drop 1 perm
+        thrPos    = head $ drop 2 perm
     in
-        zip3 list1 list2 list3
+        zip3 firstPos secPos thrPos
 
-sumPlusLists :: [[Int]] -> [([Int], [[Int]])]
-sumPlusLists lists = [(map sumTriple $ tuplesFromLists lists, lists)]
+sumPlusLists :: LoopsPermutation -> [(LoopsPermAnswers, LoopsPermutation)]
+sumPlusLists lists = [(map sumTriple $ columnsFromPerm lists, lists)]
 
-answersPlusList :: [([Int], [[Int]])]
-answersPlusList = concat $ map sumPlusLists threeListPerms
+answersPlusList :: [(LoopsPermAnswers, LoopsPermutation)]
+answersPlusList = concat $ map sumPlusLists threeWheelPerms
 
 --NOTE: SOLUTION REFACTOR - added this step after created lazy eval solution
-findSpecificAnswer :: [([Int], [[Int]])]
+findSpecificAnswer :: [(LoopsPermAnswers, LoopsPermutation)]
 findSpecificAnswer =
-    filter (\(answer, lists) -> elem answer ansPerms) answersPlusList
+    filter (\(answer, _) -> elem answer ansLoop) answersPlusList
 
 answersPermsLoop2 :: ([Int], t) -> ([[Int]], t)
-answersPermsLoop2 (ans, lists) = (wheelPerms ans, lists)
+answersPermsLoop2 (ans, lists) = (createWheelLoop ans, lists)
 
 answersPermsPlusList :: [([[Int]], [[Int]])]
 answersPermsPlusList = map answersPermsLoop2 answersPlusList
@@ -148,9 +156,9 @@ threeWheelsPermsItemByCounter (_, counter) =
    in
     [inner]
     ++
-      [wheelPermsItem sec_idx secPerms] ++
-      [wheelPermsItem thr_idx thrPerms]
---      ++ [wheelPermsItem ans_idx ansPerms]
+      [wheelPermsItem sec_idx secLoop] ++
+      [wheelPermsItem thr_idx thrLoop]
+--      ++ [wheelPermsItem ans_idx ansLoop]
 
 wheelsTuple xxs =
   let
@@ -165,18 +173,18 @@ getWheelsPermTotals n =
   map sumTriple $ wheelsTuple $ threeWheelsPermsItemByCounter $ getCounter n
 
 
--- elem (getWheelsPermTotals 120) ansPerms
+-- elem (getWheelsPermTotals 120) ansLoop
 
 --NOTE: Are probs above issues of stack or memory?
 
 --NOTE: type of stack-efficient solutions - whether tail recursion etc
 -- NOTE: efficient, but not lazy - fn doesn't stop at the answer, but won't blow out stack
 -- NOTE <- is a generator
-findAnswerLazy = [ i | i <- [1..512], let ans = elem (getWheelsPermTotals i) ansPerms, ans == True]
+findAnswerLazy = [ i | i <- [1..512], let ans = elem (getWheelsPermTotals i) ansLoop, ans == True]
 
 -- NOTE: Lazy
 -- gets first true result, but otherwise has no stopping condition
-findAnswerLazy2 = take 1 [ i | i <- [1..], let ans = elem (getWheelsPermTotals i) ansPerms, ans == True]
+findAnswerLazy2 = take 1 [ i | i <- [1..], let ans = elem (getWheelsPermTotals i) ansLoop, ans == True]
 
 -- this is list comprehension rewritten, and is efficient. however, it does go through
 -- entire sets of perms several times NOTE: MAYBE NOT, see fns below
@@ -188,7 +196,7 @@ findAnswerLazy3 =
     ansH = head $
      map (\(i, _) -> i) $
           filter (\(i, b) -> b == True) $
-             map (\i -> (i, elem (getWheelsPermTotals i) ansPerms)) [1..512]
+             map (\i -> (i, elem (getWheelsPermTotals i) ansLoop)) [1..512]
 --                                                                  NOTE: [1..] works too,
 --                                                                        proves is lazy eval
    in
@@ -236,13 +244,13 @@ testLazy2a = head $ testInf2
 -- create the solution
 
 --sumLists :: [[Int]] -> [Int]
---sumLists lists = map sumTriple $ tuplesFromLists lists
+--sumLists lists = map sumTriple $ columnsFromPerm lists
 --
 --answersList :: [[Int]]
 --answersList = map sumLists createThreeListPerms
 --
 --answersPermsLoop :: [Int] -> [[Int]]
---answersPermsLoop xs = wheelPerms xs
+--answersPermsLoop xs = createWheelLoop xs
 --
 --answersPerms :: [[[Int]]]
 --answersPerms = map answersPermsLoop answersList
@@ -265,7 +273,7 @@ testLazy2a = head $ testInf2
 --        map (\(x, y) -> x + y) tups
 
 --summedTwoLists :: [[Int]]
---summedTwoLists = map sumTwoLists twoListPerms
+--summedTwoLists = map sumTwoLists twoWheelPerms
 
 --createCandidate list =
 --    let tuples = zip list answers
