@@ -7,7 +7,7 @@ import Numeric
 --second =    [4,5,6]
 --three =     [7,8,9]
 
-inner =     [6, 5, 5, 6, 5, 4, 5, 4]
+first =     [6, 5, 5, 6, 5, 4, 5, 4]
 second =    [4, 2, 2, 2, 4, 3, 3, 1]
 three =     [1, 3, 2, 3, 3, 2, 4, 3]
 
@@ -22,27 +22,27 @@ type LoopsPermAnswers = [Int]
 turnWheel :: WheelPosition -> Int -> WheelPosition
 turnWheel wheel chunk = (drop chunk wheel) ++ (take chunk wheel)
 
-getWheelLoop :: [WheelPosition] -> WheelPosition -> Int -> WheelLoop
-getWheelLoop positions pos 0 = positions ++ [pos]
-getWheelLoop positions pos count = getWheelLoop (positions ++ [turnWheel pos count]) pos (count-1)
+buildWheelLoop :: [WheelPosition] -> WheelPosition -> Int -> WheelLoop
+buildWheelLoop positions pos 0 = positions ++ [pos]
+buildWheelLoop positions pos count = buildWheelLoop (positions ++ [turnWheel pos count]) pos (count-1)
 
-createWheelLoop :: WheelPosition -> WheelLoop
-createWheelLoop xs = getWheelLoop [] xs $ (length xs) - 1
+wheelLoopFromStartPos :: WheelPosition -> WheelLoop
+wheelLoopFromStartPos pos = buildWheelLoop [] pos $ (length pos) - 1
 
 secLoop :: WheelLoop
-secLoop = createWheelLoop second
+secLoop = wheelLoopFromStartPos second
 -- [ [4,5,6], [5,6,4] ... ]
 
 thrLoop :: WheelLoop
-thrLoop = createWheelLoop three
+thrLoop = wheelLoopFromStartPos three
 -- [ [7,8,9], [8,9,7] ... ]
 
 -- NOTE - used for revised first solution and lazy eval solution
 ansLoop :: WheelLoop
-ansLoop = createWheelLoop answers
+ansLoop = wheelLoopFromStartPos answers
 
 twoWheelPerms :: [LoopsPermutation]
-twoWheelPerms = map (\sec -> inner : sec : []) secLoop
+twoWheelPerms = map (\sec -> first : sec : []) secLoop
 --twoWheelPerms = map attachInnerList secLoop
 -- result - [ [[1,2,3], [4,5,6]],
 --            [[1,2,3], [5,6,4]], ...]
@@ -76,11 +76,11 @@ columnsFromPerm perm =
     in
         zip3 firstPos secPos thrPos
 
-sumPlusLists :: LoopsPermutation -> [(LoopsPermAnswers, LoopsPermutation)]
-sumPlusLists lists = [(map sumTriple $ columnsFromPerm lists, lists)]
+sumPlusPerm :: LoopsPermutation -> [(LoopsPermAnswers, LoopsPermutation)]
+sumPlusPerm perm = [(map sumTriple $ columnsFromPerm perm, perm)]
 
 answersPlusList :: [(LoopsPermAnswers, LoopsPermutation)]
-answersPlusList = concat $ map sumPlusLists threeWheelPerms
+answersPlusList = concat $ map sumPlusPerm threeWheelPerms
 
 --NOTE: SOLUTION REFACTOR - added this step after created lazy eval solution
 findSpecificAnswer :: [(LoopsPermAnswers, LoopsPermutation)]
@@ -88,7 +88,7 @@ findSpecificAnswer =
     filter (\(answer, _) -> elem answer ansLoop) answersPlusList
 
 answersPermsLoop2 :: ([Int], t) -> ([[Int]], t)
-answersPermsLoop2 (ans, lists) = (createWheelLoop ans, lists)
+answersPermsLoop2 (ans, lists) = (wheelLoopFromStartPos ans, lists)
 
 answersPermsPlusList :: [([[Int]], [[Int]])]
 answersPermsPlusList = map answersPermsLoop2 answersPlusList
@@ -154,7 +154,7 @@ threeWheelsPermsItemByCounter (_, counter) =
     thr_idx = head $ drop 1 counter
     ans_idx = head $ drop 2 counter
    in
-    [inner]
+    [first]
     ++
       [wheelPermsItem sec_idx secLoop] ++
       [wheelPermsItem thr_idx thrLoop]
@@ -228,12 +228,12 @@ testLazy2a = head $ testInf2
 -- correct functions, refactored out
 
 --attachLists :: [Int] -> [Int] -> [[Int]]
---attachLists inner second = inner : second : []
+--attachLists first second = first : second : []
 -- params - [1,2,3] [4,5,6]
 -- result - [ [1,2,3], [4,5,6] ]
 
 --attachInnerList :: [Int] -> [[Int]]
---attachInnerList = attachLists inner
+--attachInnerList = attachLists first
 -- param - [4,5,6]
 -- result - [ [1,2,3], [4,5,6] ]
 
@@ -250,7 +250,7 @@ testLazy2a = head $ testInf2
 --answersList = map sumLists createThreeListPerms
 --
 --answersPermsLoop :: [Int] -> [[Int]]
---answersPermsLoop xs = createWheelLoop xs
+--answersPermsLoop xs = wheelLoopFromStartPos xs
 --
 --answersPerms :: [[[Int]]]
 --answersPerms = map answersPermsLoop answersList
