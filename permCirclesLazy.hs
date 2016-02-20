@@ -18,6 +18,7 @@ type WheelLoop        = [WheelPosition]
 type LoopsPermutation = [WheelPosition]
 type LoopsPermColumn  = (Int, Int, Int)
 type LoopsPermAnswers = [Int]
+type Counter          = [Int]
 
 turnWheel :: WheelPosition -> Int -> WheelPosition
 turnWheel wheel chunk = (drop chunk wheel) ++ (take chunk wheel)
@@ -42,7 +43,7 @@ ansLoop :: WheelLoop
 ansLoop = wheelLoopFromStartPos answers
 
 twoWheelPerms :: [LoopsPermutation]
-twoWheelPerms = map (\sec -> first : sec : []) secLoop
+twoWheelPerms = map (\secPos -> first : secPos : []) secLoop
 --twoWheelPerms = map attachInnerList secLoop
 -- result - [ [[1,2,3], [4,5,6]],
 --            [[1,2,3], [5,6,4]], ...]
@@ -126,11 +127,12 @@ digits :: Integral n
 digits base = reverse . digitsRev base
 
 --counter/state (each digit up to 7)
+initCounter :: Counter
 initCounter = [0,0,0]
 
-incrementCounter = [0,0,0]
+-- incrementCounter = [0,0,0]
 
-getCounter :: Int -> (Int, [Int])
+getCounter :: Int -> (Int, Counter)
 getCounter x =
   case x >= 512 of
     True -> getCounter 0
@@ -145,14 +147,15 @@ getCounter x =
           otherwise -> (x, xs)
 
 
-wheelPermsItem :: Int -> [[Int]] -> [Int]
-wheelPermsItem idx xs = head $ drop (idx) xs
+wheelPermsItem :: Int -> WheelLoop -> WheelPosition
+wheelPermsItem idx loop = head $ drop idx loop
 
+threeWheelsPermsItemByCounter :: (a, Counter) -> LoopsPermutation
 threeWheelsPermsItemByCounter (_, counter) =
   let
     sec_idx = head counter
     thr_idx = head $ drop 1 counter
-    ans_idx = head $ drop 2 counter
+    -- ans_idx = head $ drop 2 counter
    in
     [first]
     ++
@@ -160,6 +163,7 @@ threeWheelsPermsItemByCounter (_, counter) =
       [wheelPermsItem thr_idx thrLoop]
 --      ++ [wheelPermsItem ans_idx ansLoop]
 
+wheelsTuple :: LoopsPermutation -> [LoopsPermColumn]
 wheelsTuple xxs =
   let
     inn = head xxs
@@ -168,23 +172,23 @@ wheelsTuple xxs =
   in
     zip3 inn sec thr
 
-getWheelsPermTotals :: Int -> [Int]
-getWheelsPermTotals n =
+getWheelsPermAnswers :: Int -> LoopsPermAnswers
+getWheelsPermAnswers n =
   map sumTriple $ wheelsTuple $ threeWheelsPermsItemByCounter $ getCounter n
 
 
--- elem (getWheelsPermTotals 120) ansLoop
+-- elem (getWheelsPermAnswers 120) ansLoop
 
 --NOTE: Are probs above issues of stack or memory?
 
 --NOTE: type of stack-efficient solutions - whether tail recursion etc
 -- NOTE: efficient, but not lazy - fn doesn't stop at the answer, but won't blow out stack
 -- NOTE <- is a generator
-findAnswerLazy = [ i | i <- [1..512], let ans = elem (getWheelsPermTotals i) ansLoop, ans == True]
+findAnswerLazy = [ i | i <- [1..512], let ans = elem (getWheelsPermAnswers i) ansLoop, ans == True]
 
 -- NOTE: Lazy
 -- gets first true result, but otherwise has no stopping condition
-findAnswerLazy2 = take 1 [ i | i <- [1..], let ans = elem (getWheelsPermTotals i) ansLoop, ans == True]
+findAnswerLazy2 = take 1 [ i | i <- [1..], let ans = elem (getWheelsPermAnswers i) ansLoop, ans == True]
 
 -- this is list comprehension rewritten, and is efficient. however, it does go through
 -- entire sets of perms several times NOTE: MAYBE NOT, see fns below
@@ -196,7 +200,7 @@ findAnswerLazy3 =
     ansH = head $
      map (\(i, _) -> i) $
           filter (\(i, b) -> b == True) $
-             map (\i -> (i, elem (getWheelsPermTotals i) ansLoop)) [1..512]
+             map (\i -> (i, elem (getWheelsPermAnswers i) ansLoop)) [1..512]
 --                                                                  NOTE: [1..] works too,
 --                                                                        proves is lazy eval
    in
