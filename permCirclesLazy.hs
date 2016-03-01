@@ -2,6 +2,10 @@
 import Data.List
 import Numeric
 
+-- for profiling
+import System.Environment
+import Text.Printf
+
 -- test data that is easier to visualise and debug
 --inner =     [1,2,3]
 --second =    [4,5,6]
@@ -19,6 +23,50 @@ type LoopsPermutation = [WheelPosition]
 type LoopsPermColumn  = (Int, Int, Int)
 type LoopsPermAnswers = [Int]
 type Counter          = [Int]
+
+dropInt :: Int -> WheelPosition -> Int -> WheelPosition
+dropInt n pos turns = turnWheel pos turns
+
+dropInt2 :: Int -> [LoopsPermutation]
+dropInt2 n = twoWheelPerms
+
+dropInt2a :: Int -> WheelLoop
+dropInt2a n = secLoop
+
+-- for profiling
+--ghc --make -O2 permCirclesLazy.hs
+--ghc -O2 --make ./permCirclesLazy.hs -prof
+---auto-all -caf-all -fforce-recomp
+-- -rtsopts
+--Measure-Command {.\permCirclesLazy.exe 1 +RTS -sstderr -hc -i0 -p}
+--main :: IO ()
+--main = do
+--        [d] <- map read `fmap` getArgs
+--------        w <- turnWheel first 1
+------        printf "%d" $ head (turnWheel first d)
+------        printf "%d" $ head (dropInt d first d)
+--        printf "%d" $ head (head (head (dropInt2 d)))
+----        printf "%d" $ head (head (dropInt2a d))
+------        printf "%d" head $ head $ head $ (dropInt d)
+------        printf "%d" $ head $ (\d -> twoWheelPerms) d
+------        printf "%d" $ (\v -> 1.0) d
+------        printf "%d\n" (mean [1..d])
+------        printf "%f\n" (mean [1..d])
+
+--main :: IO ()
+--main = do
+--        [d] <- ((map read) `fmap`) getArgs
+--        printf "%f\n" (mean [1..d])
+
+main :: IO ()
+main = do
+    input1 <- getLine :: IO String
+    input2 <- getLine :: IO String
+    putStrLn $ show $ dropInt2 1 -- zipp input1 input2
+
+mean :: [Double] -> Double
+mean xs = sum xs / fromIntegral (length xs)
+
 
 turnWheel :: WheelPosition -> Int -> WheelPosition
 turnWheel wheel chunk = (drop chunk wheel) ++ (take chunk wheel)
@@ -53,6 +101,7 @@ twoWheelPerms = map (\secPos -> first : secPos : []) secLoop
 minusTuple :: (Int, Int) -> Int
 minusTuple  (a, b) = b - a
 
+-- could refactor as a let clause, but then lose types
 appendTwoWheelPerms :: WheelPosition -> [LoopsPermutation]
 appendTwoWheelPerms thrPos =
   map (\twoLoopPerm ->  twoLoopPerm ++ [thrPos]) twoWheelPerms
