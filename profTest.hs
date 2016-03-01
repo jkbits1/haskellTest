@@ -7,5 +7,5 @@ main = do
         printf "%f\n" (mean [1..d])
 
 mean :: [Double] -> Double
-mean xs = sum xs / fromIntegral (length xs)
+mean xs = {-# SCC "mean" #-} sum xs / fromIntegral (length xs)
 
