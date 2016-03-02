@@ -7,9 +7,26 @@ import System.Environment
 import Text.Printf
 
 -- test data that is easier to visualise and debug
---inner =     [1,2,3]
+--first =     [1,2,3]
 --second =    [4,5,6]
 --three =     [7,8,9]
+--
+--answers = [12, 15, 18]
+
+--first =     [1,  2,  3,  4]
+--second =    [5,  6,  7,  8]
+--three =     [9,  10, 11, 12]
+--
+--answers =   [15, 18, 21, 24]
+
+--first =     [1,   2,  3,  4,  5,  6]
+--second =    [7,   8,  9, 10, 11, 12]
+--three =     [13, 14, 15, 16, 17, 18]
+
+--answers =   [21, 24, 27, 30, 33, 36] -- for 1..6
+--answers =   [26, 24, 27, 30, 33, 31]   -- for first as below
+--first =     [6,   2,  3,  4,  5,  1]
+
 
 first =     [6, 5, 5, 6, 5, 4, 5, 4]
 second =    [4, 2, 2, 2, 4, 3, 3, 1]
@@ -62,7 +79,14 @@ main :: IO ()
 main = do
     input1 <- getLine :: IO String
     input2 <- getLine :: IO String
-    putStrLn $ show $ dropInt2 1 -- zipp input1 input2
+--    putStrLn $ show $ dropInt2 1 -- zipp input1 input2
+--    putStrLn $ show $ secLoop
+--    putStrLn $ show $ twoWheelPerms
+--    putStrLn $ show $ threeWheelPerms
+--    putStrLn $ show $ findSpecificAnswer
+--    putStrLn $ show $ findSpecificAnswerPlusList
+    putStrLn $ show $ findAnswerLazy3
+
 
 mean :: [Double] -> Double
 mean xs = sum xs / fromIntegral (length xs)
@@ -80,15 +104,18 @@ wheelLoopFromStartPos pos = buildWheelLoop [] pos $ (length pos) - 1
 
 secLoop :: WheelLoop
 secLoop = wheelLoopFromStartPos second
+--secLoop = permutations second
 -- [ [4,5,6], [5,6,4] ... ]
 
 thrLoop :: WheelLoop
 thrLoop = wheelLoopFromStartPos three
+--thrLoop = permutations three
 -- [ [7,8,9], [8,9,7] ... ]
 
 -- NOTE - used for revised first solution and lazy eval solution
 ansLoop :: WheelLoop
 ansLoop = wheelLoopFromStartPos answers
+--ansLoop = permutations answers
 
 twoWheelPerms :: [LoopsPermutation]
 twoWheelPerms = map (\secPos -> first : secPos : []) secLoop
@@ -249,7 +276,9 @@ findAnswerLazy3 =
     ansH = head $
      map (\(i, _) -> i) $
           filter (\(i, b) -> b == True) $
-             map (\i -> (i, elem (getWheelsPermAnswers i) ansLoop)) [1..512]
+             map (\i -> (i, elem (getWheelsPermAnswers i) ansLoop))
+--           [1..512]
+             [1..]
 --                                                                  NOTE: [1..] works too,
 --                                                                        proves is lazy eval
    in
