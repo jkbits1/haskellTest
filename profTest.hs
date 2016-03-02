@@ -8,7 +8,8 @@ main = do
         [d] <- ((map read) `fmap`) getArgs
 --        printf "%f\n" (mean [1..d])
 --        printf "%f\n" (meanFoldl [1..d])
-        printf "%f\n" (meanFoldl' [1..d])
+--        printf "%f\n" (meanFoldl' [1..d])
+        printf "%f\n" (meanNF [1..d])
 
 mean :: [Double] -> Double
 mean xs = {-# SCC "mean" #-} sum xs / fromIntegral (length xs)
@@ -19,8 +20,15 @@ meanFoldl xs = s / fromIntegral n
     (n, s)      = foldl k (0, 0) xs
     k (n, s) x  = (n+1, s+x)
 
+-- to WHNF only
 meanFoldl' :: [Double] -> Double
 meanFoldl' xs = s / fromIntegral n
   where
     (n, s)      = foldl' k (0, 0) xs
     k (n, s) x  = (n+1, s+x)
+
+meanNF :: [Double] -> Double
+meanNF xs = s / fromIntegral n
+  where
+     (n, s)     = foldl' k (0,0) xs
+     k (n, s) x = n `seq` s `seq` (n + 1, s+x)
