@@ -13,6 +13,10 @@ import Text.Printf
 --
 --answers = [12, 15, 18]
 
+--
+-- assorted load test values
+--
+
 --first =     [1,  2,  3,  4]
 --second =    [5,  6,  7,  8]
 --three =     [9,  10, 11, 12]
@@ -84,8 +88,17 @@ main = do
 --    putStrLn $ show $ twoWheelPerms
 --    putStrLn $ show $ threeWheelPerms
 --    putStrLn $ show $ findSpecificAnswer
---    putStrLn $ show $ findSpecificAnswerPlusList
-    putStrLn $ show $ findAnswerLazy3
+    putStrLn $ show $ head findSpecificAnswerPlusList
+--    putStrLn $ show $ findAnswerLazy3
+
+
+--
+-- use these settings for load testing
+--
+--secLoop = permutations second
+--thrLoop = permutations three
+--ansLoop = permutations answers
+--getCounterBase = 720
 
 
 mean :: [Double] -> Double
@@ -104,18 +117,15 @@ wheelLoopFromStartPos pos = buildWheelLoop [] pos $ (length pos) - 1
 
 secLoop :: WheelLoop
 secLoop = wheelLoopFromStartPos second
---secLoop = permutations second
 -- [ [4,5,6], [5,6,4] ... ]
 
 thrLoop :: WheelLoop
 thrLoop = wheelLoopFromStartPos three
---thrLoop = permutations three
 -- [ [7,8,9], [8,9,7] ... ]
 
 -- NOTE - used for revised first solution and lazy eval solution
 ansLoop :: WheelLoop
 ansLoop = wheelLoopFromStartPos answers
---ansLoop = permutations answers
 
 twoWheelPerms :: [LoopsPermutation]
 twoWheelPerms = map (\secPos -> first : secPos : []) secLoop
@@ -208,13 +218,16 @@ initCounter = [0,0,0]
 
 -- incrementCounter = [0,0,0]
 
+getCounterBase = 8
+
 getCounter :: Int -> (Int, Counter)
 getCounter x =
-  case x >= 512 of
+--  case x >= 512 of
+  case x < 0 of
     True -> getCounter 0
     False ->
       let
-        xs = digits 8 x
+        xs = digits getCounterBase x
       in
         case length xs of
           0 -> (x, [0,0,0])
