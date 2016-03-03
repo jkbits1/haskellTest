@@ -91,7 +91,7 @@ main = do
 --    putStrLn $ show $ twoWheelPerms
 --    putStrLn $ show $ threeWheelPerms
 --    putStrLn $ show $ findSpecificAnswer
-    putStrLn $ show $ head findSpecificAnswerPlusList
+--    putStrLn $ show $ head findSpecificAnswerPlusList
 --    putStrLn $ show $ findAnswerLazy3
 --    putStrLn $ show $ findAnswerLazy2
 --    putStrLn $ show $ findAnswerLazyBit
@@ -102,7 +102,7 @@ main = do
 --    putStrLn $ show $ findAnswerLazyBitSum
 --    putStrLn $ show $ findAnswerLazy4  83000 --0
 --    putStrLn $ show $ findAnswerLazy4  84500 --0
---    putStrLn $ show $ findAnswerLazy4  80000 --0
+    putStrLn $ show $ findAnswerLazy4  80000 --0
 --    putStrLn $ show $ findAnswerLazy4  86399 --0
 --    putStrLn $ show $ findAnswerLazy4  86400 --0
 --    putStrLn $ show $ getWheelsPermAnswers 1
@@ -284,8 +284,10 @@ wheelsTuple xxs =
 
 getWheelsPermAnswers :: Int -> LoopsPermAnswers
 getWheelsPermAnswers n =
-  map sumTriple $ wheelsTuple $ threeWheelsPermsItemByCounter $ getCounter n
+  mapTest sumTriple $ wheelsTuple $ threeWheelsPermsItemByCounter $ getCounter n
 
+--experiments
+mapTest f xs = foldr (\x ys -> f x : ys) [] xs
 
 --findAnswerLazyBit = [ c | i <- [1..84600], let c = getCounter i]
 --findAnswerLazyBit = [ item | i <- [1..84600], let item = threeWheelsPermsItemByCounter $ getCounter i]
