@@ -1,3 +1,4 @@
+import Control.DeepSeq
 
 import Data.List
 import Numeric
@@ -5,6 +6,8 @@ import Numeric
 -- for profiling
 import System.Environment
 import Text.Printf
+
+--import Control.DeepSeq
 
 {-# LANGUAGE BangPatterns #-}
 
@@ -83,38 +86,53 @@ dropInt2a n = secLoop
 --        printf "%f\n" (mean [1..d])
 
 main :: IO ()
-main = do
-    input1 <- getLine :: IO String
-    input2 <- getLine :: IO String
---    putStrLn $ show $ dropInt2 1 -- zipp input1 input2
---    putStrLn $ show $ secLoop
---    putStrLn $ show $ twoWheelPerms
---    putStrLn $ show $ threeWheelPerms
---    putStrLn $ show $ findSpecificAnswer
---    putStrLn $ show $ head findSpecificAnswerPlusList
---    putStrLn $ show $ findAnswerLazy3
---    putStrLn $ show $ findAnswerLazy2
---    putStrLn $ show $ findAnswerLazyBit
---    putStrLn $ show $ head $ findAnswerLazyBit
---    putStrLn $ show $ length $ findAnswerLazyBit
---    putStrLn $ show $ length findAnswerLazyBitSum
---    putStrLn $ show $ head findAnswerLazyBitSum
---    putStrLn $ show $ findAnswerLazyBitSum
---    putStrLn $ show $ findAnswerLazy4  83000 --0
---    putStrLn $ show $ findAnswerLazy4  84500 --0
-    putStrLn $ show $ findAnswerLazy4  80000 --0
---    putStrLn $ show $ findAnswerLazy4  86399 --0
---    putStrLn $ show $ findAnswerLazy4  86400 --0
---    putStrLn $ show $ getWheelsPermAnswers 1
+main =
+  let
+    results choice =
+      case choice of
+        "0" ->        show $ findAnswerLazy2a
+        "1" ->        show $ findAnswerLazy4 lazy2startPos
+        "2" ->        show $ head findSpecificAnswer
+        otherwise ->  show $ head findSpecificAnswerPlusList
+  in
+    do
+      input1 <- getLine :: IO String
+  --    input2 <- getLine :: IO String
+  --    putStrLn $ show $ dropInt2 1 -- zipp input1 input2
+  --    putStrLn $ show $ secLoop
+  --    putStrLn $ show $ twoWheelPerms
+  --    putStrLn $ show $ threeWheelPerms
+  --    putStrLn $ show $ findSpecificAnswer
+  --    putStrLn $ show $ head findSpecificAnswerPlusList
+  --    putStrLn $ show $ findAnswerLazy3
+  --    putStrLn $ show $ findAnswerLazy2a
+  --    putStrLn $ show $ findAnswerLazy4 0
+      putStrLn input1
+      putStrLn $ results input1
+  --    putStrLn $ show $ findAnswerLazyBit
+  --    putStrLn $ show $ head $ findAnswerLazyBit
+  --    putStrLn $ show $ length $ findAnswerLazyBit
+  --    putStrLn $ show $ length findAnswerLazyBitSum
+  --    putStrLn $ show $ head findAnswerLazyBitSum
+  --    putStrLn $ show $ findAnswerLazyBitSum
+  --    putStrLn $ show $ findAnswerLazy4  83000 --0
+  --    putStrLn $ show $ findAnswerLazy4  84500 --0
+  --    putStrLn $ show $ findAnswerLazy4  80000 --0
+  --    putStrLn $ show $ findAnswerLazy4  86399 --0
+  --    putStrLn $ show $ findAnswerLazy4  86400 --0
+  --    putStrLn $ show $ head findAnswerLazy
+  --    putStrLn $ show $ getWheelsPermAnswers 1
 
 --
 -- use these settings for load testing
 --
-secLoop = permutations second
-thrLoop = permutations three
-ansLoop = permutations answers
+--secLoop = permutations second
+--thrLoop = permutations three
+--ansLoop = permutations answers
+wheelLoopFromStartPos pos = permutations pos
 getCounterBase = 720
-lazy2startPos = 83000
+--lazy2startPos = 83000
+lazy2startPos = 0
 
 
 mean :: [Double] -> Double
@@ -129,19 +147,19 @@ buildWheelLoop positions pos 0 = positions ++ [pos]
 buildWheelLoop positions pos count = buildWheelLoop (positions ++ [turnWheel pos count]) pos (count-1)
 
 wheelLoopFromStartPos :: WheelPosition -> WheelLoop
-wheelLoopFromStartPos pos = buildWheelLoop [] pos $ (length pos) - 1
+--wheelLoopFromStartPos pos = buildWheelLoop [] pos $ (length pos) - 1
 
 secLoop :: WheelLoop
---secLoop = wheelLoopFromStartPos second
+secLoop = wheelLoopFromStartPos second
 -- [ [4,5,6], [5,6,4] ... ]
 
 thrLoop :: WheelLoop
---thrLoop = wheelLoopFromStartPos three
+thrLoop = wheelLoopFromStartPos three
 -- [ [7,8,9], [8,9,7] ... ]
 
 -- NOTE - used for revised first solution and lazy eval solution
 ansLoop :: WheelLoop
---ansLoop = wheelLoopFromStartPos answers
+ansLoop = wheelLoopFromStartPos answers
 
 twoWheelPerms :: [LoopsPermutation]
 twoWheelPerms = map (\secPos -> first : secPos : []) secLoop
@@ -302,7 +320,8 @@ findAnswerLazyBitSum = map sumTriple $ concat findAnswerLazyBit
 --NOTE: type of stack-efficient solutions - whether tail recursion etc
 -- NOTE: efficient, but not lazy - fn doesn't stop at the answer, but won't blow out stack
 -- NOTE <- is a generator
-findAnswerLazy = [ i | i <- [1..512], let ans = elem (getWheelsPermAnswers i) ansLoop, ans == True]
+--findAnswerLazy = [ i | i <- [1..512], let ans = elem (getWheelsPermAnswers i) ansLoop, ans == True]
+findAnswerLazy = [ i | i <- [1..], let ans = elem (getWheelsPermAnswers i) ansLoop, ans == True]
 
 -- NOTE: Lazy
 -- gets first true result, but otherwise has no stopping condition
@@ -310,6 +329,17 @@ findAnswerLazy2 =
   take 1 [
     i |
       i <- [lazy2startPos..], let ans = elem (getWheelsPermAnswers i) ansLoop, ans == True]
+
+findAnswerLazy2a =
+  let
+    permAnswers i = (getWheelsPermAnswers i)
+  in
+--    seq
+    deepseq
+      permAnswers
+      take 1 [
+        i |
+          i <- [lazy2startPos..], let ans = elem (permAnswers i) ansLoop, ans == True]
 
 -- this is list comprehension rewritten, and is efficient. however, it does go through
 -- entire sets of perms several times NOTE: MAYBE NOT, see fns below
@@ -334,11 +364,15 @@ findAnswerLazy4 i =
     item = wheelsTuple $ threeWheelsPermsItemByCounter $ getCounter i
     ans = map sumTriple item
     found = elem ans ansLoop
+    processFound found =
+      case found of
+        True -> i
+        False -> findAnswerLazy4 $ i + 1
+  --    found
   in
-    case found of
-      True -> i
-      False -> findAnswerLazy4 $ i + 1
---    found
+    deepseq
+      found
+      processFound found
 
 
 -- expected this to work
