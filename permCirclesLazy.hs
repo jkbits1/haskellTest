@@ -24,25 +24,46 @@ import Text.Printf
 --
 
 --first =     [1,  2,  3,  4]
+--first =     [2,  3,  4,  1]
 --second =    [5,  6,  7,  8]
 --three =     [9,  10, 11, 12]
 --
 --answers =   [15, 18, 21, 24]
+--getCounterBase = 24
+
+--first =     [ 1,  2,  3,  4,  5]
+first =     [ 2,  3,  4,  5,  1]
+second =    [ 6,  7,  8,  9, 10]
+three =     [11, 12, 13, 14, 15]
+
+answers =   [18, 21, 24, 27, 30]
+getCounterBase = 120
 
 --first =     [1,   2,  3,  4,  5,  6]
+--first =     [2,  3,  4,  5,  6,   1]
 --second =    [7,   8,  9, 10, 11, 12]
 --three =     [13, 14, 15, 16, 17, 18]
-
+--
 --answers =   [21, 24, 27, 30, 33, 36] -- for 1..6
 --answers =   [26, 24, 27, 30, 33, 31]   -- for first as below
 --first =     [6,   2,  3,  4,  5,  1]
+--getCounterBase = 720
+
+--first =     [1,   2,  3,  4,  5,  6,  7]
+--first =     [7,   1,  2,  3,  4,  5,  6]
+--second =    [8,   9, 10, 11, 12, 13, 14]
+--three =     [15, 16, 17, 18, 19, 20, 21]
+--
+--answers =   [24, 27, 30, 33, 36, 39, 42] -- for 1..7
+--answers =   [25, 28, 31, 34, 37, 40, 36] -- for first as below
+--first =     [ 2,  3,  4,  5,  6,  7,  1]
 
 
-first =     [6, 5, 5, 6, 5, 4, 5, 4]
-second =    [4, 2, 2, 2, 4, 3, 3, 1]
-three =     [1, 3, 2, 3, 3, 2, 4, 3]
-
-answers = [12, 8, 12, 10, 10, 12, 10, 8]
+--first =     [6, 5, 5, 6, 5, 4, 5, 4]
+--second =    [4, 2, 2, 2, 4, 3, 3, 1]
+--three =     [1, 3, 2, 3, 3, 2, 4, 3]
+--
+--answers = [12, 8, 12, 10, 10, 12, 10, 8]
 
 type WheelPosition    = [Int]
 type WheelLoop        = [WheelPosition]
@@ -61,8 +82,8 @@ dropInt2a :: Int -> WheelLoop
 dropInt2a n = secLoop
 
 -- for profiling
---ghc --make -O2 permCirclesLazy.hs
--- ghc -O2 --make ./permCirclesLazy.hs -prof
+-- ghc --make -O2 permCirclesLazy.hs -rtsopts
+-- ghc --make -O2 ./permCirclesLazy.hs -prof
 -- -auto-all -caf-all -fforce-recomp
 -- -rtsopts
 --Measure-Command {.\permCirclesLazy.exe 1 +RTS -sstderr -hc -i0 -p}
@@ -85,44 +106,47 @@ dropInt2a n = secLoop
 --        [d] <- ((map read) `fmap`) getArgs
 --        printf "%f\n" (mean [1..d])
 
-main :: IO ()
-main =
-  let
-    results choice =
-      case choice of
-        "0" ->        show $ findAnswerLazy2a
-        "1" ->        show $ findAnswerLazy4 lazy2startPos
-        "2" ->        show $ head findSpecificAnswer
-        otherwise ->  show $ head findSpecificAnswerPlusList
-  in
-    do
-      input1 <- getLine :: IO String
-  --    input2 <- getLine :: IO String
-  --    putStrLn $ show $ dropInt2 1 -- zipp input1 input2
-  --    putStrLn $ show $ secLoop
-  --    putStrLn $ show $ twoWheelPerms
-  --    putStrLn $ show $ threeWheelPerms
-  --    putStrLn $ show $ findSpecificAnswer
-  --    putStrLn $ show $ head findSpecificAnswerPlusList
-  --    putStrLn $ show $ findAnswerLazy3
-  --    putStrLn $ show $ findAnswerLazy2a
-  --    putStrLn $ show $ findAnswerLazy4 0
-      putStrLn input1
-      putStrLn $ results input1
-  --    putStrLn $ show $ findAnswerLazyBit
-  --    putStrLn $ show $ head $ findAnswerLazyBit
-  --    putStrLn $ show $ length $ findAnswerLazyBit
-  --    putStrLn $ show $ length findAnswerLazyBitSum
-  --    putStrLn $ show $ head findAnswerLazyBitSum
-  --    putStrLn $ show $ findAnswerLazyBitSum
-  --    putStrLn $ show $ findAnswerLazy4  83000 --0
-  --    putStrLn $ show $ findAnswerLazy4  84500 --0
-  --    putStrLn $ show $ findAnswerLazy4  80000 --0
-  --    putStrLn $ show $ findAnswerLazy4  86399 --0
-  --    putStrLn $ show $ findAnswerLazy4  86400 --0
-  --    putStrLn $ show $ head findAnswerLazy
-  --    putStrLn $ show $ getWheelsPermAnswers 1
-
+--main :: IO ()
+--main =
+--  let
+--    results choice =
+--      case choice of
+----        "0" ->        show $ findAnswerLazy2a
+--        "0" ->        show $ findAnswerLazy2
+--        "1" ->        show $ findAnswerLazy4 lazy2startPos
+--        "2" ->        show $ head findSpecificAnswer
+----        "2" ->        show $ findSpecificAnswer
+----        otherwise ->  show $ head findSpecificAnswerPlusList
+--        otherwise ->  show $ head $ fst $ head findSpecificAnswerPlusList
+--  in
+--    do
+--      input1 <- getLine :: IO String
+--  --    input2 <- getLine :: IO String
+--  --    putStrLn $ show $ dropInt2 1 -- zipp input1 input2
+--  --    putStrLn $ show $ secLoop
+--  --    putStrLn $ show $ twoWheelPerms
+--  --    putStrLn $ show $ threeWheelPerms
+--  --    putStrLn $ show $ findSpecificAnswer
+--  --    putStrLn $ show $ head findSpecificAnswerPlusList
+--  --    putStrLn $ show $ findAnswerLazy3
+--  --    putStrLn $ show $ findAnswerLazy2a
+--  --    putStrLn $ show $ findAnswerLazy4 0
+--      putStrLn input1
+--      putStrLn $ results input1
+--  --    putStrLn $ show $ findAnswerLazyBit
+--  --    putStrLn $ show $ head $ findAnswerLazyBit
+--  --    putStrLn $ show $ length $ findAnswerLazyBit
+--  --    putStrLn $ show $ length findAnswerLazyBitSum
+--  --    putStrLn $ show $ head findAnswerLazyBitSum
+--  --    putStrLn $ show $ findAnswerLazyBitSum
+--  --    putStrLn $ show $ findAnswerLazy4  83000 --0
+--  --    putStrLn $ show $ findAnswerLazy4  84500 --0
+--  --    putStrLn $ show $ findAnswerLazy4  80000 --0
+--  --    putStrLn $ show $ findAnswerLazy4  86399 --0
+--  --    putStrLn $ show $ findAnswerLazy4  86400 --0
+--  --    putStrLn $ show $ head findAnswerLazy
+--  --    putStrLn $ show $ getWheelsPermAnswers 1
+--
 --
 -- use these settings for load testing
 --
@@ -130,7 +154,6 @@ main =
 --thrLoop = permutations three
 --ansLoop = permutations answers
 wheelLoopFromStartPos pos = permutations pos
-getCounterBase = 720
 --lazy2startPos = 83000
 lazy2startPos = 0
 
@@ -272,15 +295,15 @@ getCounter x =
 
 
 wheelPermsItem :: Int -> WheelLoop -> WheelPosition
---wheelPermsItem idx loop = head $ drop idx loop
-wheelPermsItem idx loop = loop !! idx
+wheelPermsItem idx loop = head $ drop idx loop
+--wheelPermsItem idx loop = loop !! idx
 
 threeWheelsPermsItemByCounter :: (a, Counter) -> LoopsPermutation
 threeWheelsPermsItemByCounter (_, counter) =
   let
     sec_idx = head counter
---    thr_idx = head $ drop 1 counter
-    thr_idx = counter !! 1
+    thr_idx = head $ drop 1 counter
+--    thr_idx = counter !! 1
     -- ans_idx = head $ drop 2 counter
    in
     [first]
@@ -293,10 +316,10 @@ wheelsTuple :: LoopsPermutation -> [LoopsPermColumn]
 wheelsTuple xxs =
   let
     inn = head xxs
---    sec = head $ drop 1 xxs
---    thr = head $ drop 2 xxs
-    sec = xxs !! 1
-    thr = xxs !! 2
+    sec = head $ drop 1 xxs
+    thr = head $ drop 2 xxs
+--    sec = xxs !! 1
+--    thr = xxs !! 2
   in
     zip3 inn sec thr
 
@@ -347,6 +370,9 @@ findAnswerLazy2a =
 --      may have to merge stages etc
 -- ?? how to rewrite list comp in a lazy eval method?
 findAnswerLazy3 =
+
+--  NOTE refactor filter as takeWhile
+
   let
     ansH = head $
      map (\(i, _) -> i) $
