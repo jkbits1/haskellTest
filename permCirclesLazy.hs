@@ -32,22 +32,21 @@ import Text.Printf
 --getCounterBase = 24
 
 --first =     [ 1,  2,  3,  4,  5]
-first =     [ 2,  3,  4,  5,  1]
-second =    [ 6,  7,  8,  9, 10]
-three =     [11, 12, 13, 14, 15]
-
-answers =   [18, 21, 24, 27, 30]
-getCounterBase = 120
-
---first =     [1,   2,  3,  4,  5,  6]
---first =     [2,  3,  4,  5,  6,   1]
---second =    [7,   8,  9, 10, 11, 12]
---three =     [13, 14, 15, 16, 17, 18]
+--first =     [ 2,  3,  4,  5,  1]
+--second =    [ 6,  7,  8,  9, 10]
+--three =     [11, 12, 13, 14, 15]
 --
---answers =   [21, 24, 27, 30, 33, 36] -- for 1..6
---answers =   [26, 24, 27, 30, 33, 31]   -- for first as below
---first =     [6,   2,  3,  4,  5,  1]
---getCounterBase = 720
+--answers =   [18, 21, 24, 27, 30]
+--getCounterBase = 120
+
+--first =     [ 1,  2,  3,  4,  5,  6]
+first =     [ 2,  3,  4,  5,  6,  1]
+second =    [ 7,  8,  9, 10, 11, 12]
+--second =    [ 8,  9, 10, 11, 12,  7]
+three =     [13, 14, 15, 16, 17, 18]
+--
+answers =   [21, 24, 27, 30, 33, 36] -- for 1..6
+getCounterBase = 720
 
 --first =     [1,   2,  3,  4,  5,  6,  7]
 --first =     [7,   1,  2,  3,  4,  5,  6]
@@ -106,21 +105,27 @@ dropInt2a n = secLoop
 --        [d] <- ((map read) `fmap`) getArgs
 --        printf "%f\n" (mean [1..d])
 
---main :: IO ()
---main =
---  let
---    results choice =
---      case choice of
-----        "0" ->        show $ findAnswerLazy2a
---        "0" ->        show $ findAnswerLazy2
---        "1" ->        show $ findAnswerLazy4 lazy2startPos
---        "2" ->        show $ head findSpecificAnswer
-----        "2" ->        show $ findSpecificAnswer
-----        otherwise ->  show $ head findSpecificAnswerPlusList
---        otherwise ->  show $ head $ fst $ head findSpecificAnswerPlusList
---  in
---    do
---      input1 <- getLine :: IO String
+main :: IO ()
+main =
+  let
+    results choice =
+      case choice of
+--        "0" ->        show $ findAnswerLazy2a
+        "0" ->        show $ findAnswerLazy2
+        "1" ->        show $ head findAnswerLazy3
+        "2" ->        show $ head findAnswerLazy3a
+        "3" ->        show $ findAnswerLazy4 lazy2startPos
+        "4" ->        show $ head findSpecificAnswer
+--        "2" ->        show $ findSpecificAnswer
+--        otherwise ->  show $ head findSpecificAnswerPlusList
+        otherwise ->  show $ head $ fst $ head findSpecificAnswerPlusList
+  in
+    do
+      putStrLn "0 - findAnswerLazy2, 1 - findAnswerLazy3, 2 - findAnswerLazy3a, 3 - findAnswerLazy4, 4 - findSpecificAnswer, 5+ - findSpecificAnswerPlusList"
+      input1 <- getLine :: IO String
+      putStrLn input1
+      putStrLn $ results input1
+
 --  --    input2 <- getLine :: IO String
 --  --    putStrLn $ show $ dropInt2 1 -- zipp input1 input2
 --  --    putStrLn $ show $ secLoop
@@ -131,8 +136,6 @@ dropInt2a n = secLoop
 --  --    putStrLn $ show $ findAnswerLazy3
 --  --    putStrLn $ show $ findAnswerLazy2a
 --  --    putStrLn $ show $ findAnswerLazy4 0
---      putStrLn input1
---      putStrLn $ results input1
 --  --    putStrLn $ show $ findAnswerLazyBit
 --  --    putStrLn $ show $ head $ findAnswerLazyBit
 --  --    putStrLn $ show $ length $ findAnswerLazyBit
@@ -288,15 +291,27 @@ getCounter x =
         xs = digits getCounterBase x
       in
         case length xs of
-          0 -> (x, [0,0,0])
-          1 -> (x, [0,0] ++ xs)
-          2 -> (x, [0] ++ xs)
+--          0 -> (x, [0,0,0])
+--          1 -> (x, [0,0] ++ xs)
+--          2 -> (x, [0] ++ xs)
+          0 -> (x, [0,0])
+          1 -> (x, [0] ++ xs)
           otherwise -> (x, xs)
-
 
 wheelPermsItem :: Int -> WheelLoop -> WheelPosition
 wheelPermsItem idx loop = head $ drop idx loop
 --wheelPermsItem idx loop = loop !! idx
+
+threeWheelsPermsItemByCounterTest :: (a, Counter) -> (Int, Int)
+threeWheelsPermsItemByCounterTest (_, counter) =
+  let
+    sec_idx = head counter
+    thr_idx = head $ drop 1 counter
+--    thr_idx = counter !! 1
+    -- ans_idx = head $ drop 2 counter
+   in
+    (sec_idx, thr_idx)
+
 
 threeWheelsPermsItemByCounter :: (a, Counter) -> LoopsPermutation
 threeWheelsPermsItemByCounter (_, counter) =
@@ -328,11 +343,22 @@ getWheelsPermAnswers n =
   mapTest sumTriple $ wheelsTuple $ threeWheelsPermsItemByCounter $ getCounter n
 
 --experiments
+
+
+findAnswerTest = [ i |
+--  i <- [1..5000000],
+  i <- [1..(getCounterBase*getCounterBase)],
+--  i <- [1..(getCounterBase*getCounterBase*getCounterBase)],
+--  i <- [1..(getCounterBase*getCounterBase*10)],
+  let ans = elem (head (getWheelsPermAnswers i)) answers, ans == True]
+
+
+
 mapTest f xs = foldr (\x ys -> f x : ys) [] xs
 
 --findAnswerLazyBit = [ c | i <- [1..84600], let c = getCounter i]
 --findAnswerLazyBit = [ item | i <- [1..84600], let item = threeWheelsPermsItemByCounter $ getCounter i]
-findAnswerLazyBit = [ item | i <- [1..84600], let item = wheelsTuple $ threeWheelsPermsItemByCounter $ getCounter i]
+findAnswerLazyBit = [ item | i <- [0..84600], let item = wheelsTuple $ threeWheelsPermsItemByCounter $ getCounter i]
 
 findAnswerLazyBitSum = map sumTriple $ concat findAnswerLazyBit
 
@@ -344,7 +370,7 @@ findAnswerLazyBitSum = map sumTriple $ concat findAnswerLazyBit
 -- NOTE: efficient, but not lazy - fn doesn't stop at the answer, but won't blow out stack
 -- NOTE <- is a generator
 --findAnswerLazy = [ i | i <- [1..512], let ans = elem (getWheelsPermAnswers i) ansLoop, ans == True]
-findAnswerLazy = [ i | i <- [1..], let ans = elem (getWheelsPermAnswers i) ansLoop, ans == True]
+findAnswerLazy = [ i | i <- [0..], let ans = elem (getWheelsPermAnswers i) ansLoop, ans == True]
 
 -- NOTE: Lazy
 -- gets first true result, but otherwise has no stopping condition
@@ -370,16 +396,33 @@ findAnswerLazy2a =
 --      may have to merge stages etc
 -- ?? how to rewrite list comp in a lazy eval method?
 findAnswerLazy3 =
-
---  NOTE refactor filter as takeWhile
-
   let
-    ansH = head $
-     map (\(i, _) -> i) $
-          filter (\(i, b) -> b == True) $
-             map (\i -> (i, elem (getWheelsPermAnswers i) ansLoop))
---           [1..512]
-             [1..]
+    ansH =
+      fst $
+      head $
+--     map (\(i, _) -> i) $
+--          filter (\(i, b) -> b == True)
+          dropWhile (\(_, b) -> b == False)
+            $ map (\i -> (i, elem (getWheelsPermAnswers i) ansLoop))
+--              [1..512]
+              [1..]
+--                                                                  NOTE: [1..] works too,
+--                                                                        proves is lazy eval
+   in
+    threeWheelsPermsItemByCounter $ getCounter ansH
+
+findAnswerLazy3a =
+  let
+    ansH =
+      fst $
+      head $
+--     map (\(i, _) -> i) $
+--          filter (\(i, b) -> b == True)
+          dropWhile (\(_, b) -> b == False)
+            $ map (\i -> (i, elem (getWheelsPermAnswers i) ansLoop))
+--              [1..512]
+--              [1..]
+              findAnswerTest
 --                                                                  NOTE: [1..] works too,
 --                                                                        proves is lazy eval
    in
@@ -399,6 +442,30 @@ findAnswerLazy4 i =
     deepseq
       found
       processFound found
+
+findAnswerLazy5 start =
+  let
+    checked = findAnswerTest
+    findAnswerLazy4a i checked =
+      case elem i checked of
+        False -> findAnswerLazy4a (i + 1) checked
+        True ->
+          let
+            item = wheelsTuple $ threeWheelsPermsItemByCounter $ getCounter i
+            ans = map sumTriple item
+            found = elem ans ansLoop
+            processFound found =
+              case found of
+                True -> i
+                False -> findAnswerLazy4a (i + 1) checked
+          --    found
+          in
+            deepseq
+              found
+              processFound found
+  in
+    findAnswerLazy4a start checked
+
 
 
 -- expected this to work
@@ -482,5 +549,10 @@ testLazy2a = head $ testInf2
 --candidates = map createCandidate summedTwoLists
 
 
-
+--NOTE ideas,
+--filter second third etc
+--filter duplicates, can we predict, eg from twoPerms ?
+--rotate candidates
+-- getCounter, can it provide hints on twoWheelPerms change points etc?
+--  consider what it genrates, ...
 
