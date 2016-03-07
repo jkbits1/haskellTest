@@ -48,21 +48,21 @@ import Text.Printf
 --getCounterBase = 720
 
 --first =     [1,   2,  3,  4,  5,  6,  7]
-first =     [7,   1,  2,  3,  4,  5,  6]
-second =    [8,   9, 10, 11, 12, 13, 14]
-three =     [15, 16, 17, 18, 19, 20, 21]
---
-answers =   [24, 27, 30, 33, 36, 39, 42] -- for 1..7
+--first =     [7,   1,  2,  3,  4,  5,  6]
+--second =    [8,   9, 10, 11, 12, 13, 14]
+--three =     [15, 16, 17, 18, 19, 20, 21]
+----
+--answers =   [24, 27, 30, 33, 36, 39, 42] -- for 1..7
 --answers =   [25, 28, 31, 34, 37, 40, 36] -- for first as below
 --first =     [ 2,  3,  4,  5,  6,  7,  1]
-getCounterBase = 5040
+--getCounterBase = 5040
 
 
---first =     [6, 5, 5, 6, 5, 4, 5, 4]
---second =    [4, 2, 2, 2, 4, 3, 3, 1]
---three =     [1, 3, 2, 3, 3, 2, 4, 3]
---
---answers = [12, 8, 12, 10, 10, 12, 10, 8]
+first =     [6, 5, 5, 6, 5, 4, 5, 4]
+second =    [4, 2, 2, 2, 4, 3, 3, 1]
+three =     [1, 3, 2, 3, 3, 2, 4, 3]
+
+answers = [12, 8, 12, 10, 10, 12, 10, 8]
 
 type WheelPosition    = [Int]
 type WheelLoop        = [WheelPosition]
@@ -113,7 +113,8 @@ main =
 --        "0" ->        show $ findAnswerLazy2a
         "0" ->        show $ findAnswerLazy2
         "1" ->        show $ head findAnswerLazy3
-        "2" ->        show $ head findAnswerLazy3a
+--        "2" ->        show $ head findAnswerLazy3a
+        "2" ->        show $ findAnswerLazy3a
         "3" ->        show $ findAnswerLazy4 lazy2startPos
         "4" ->        show $ head findSpecificAnswer
 --        "2" ->        show $ findSpecificAnswer
@@ -156,9 +157,9 @@ main =
 --secLoop = permutations second
 --thrLoop = permutations three
 --ansLoop = permutations answers
-wheelLoopFromStartPos pos = permutations pos
+--wheelLoopFromStartPos pos = permutations pos
 --lazy2startPos = 83000
-lazy2startPos = 0
+--lazy2startPos = 0
 
 
 mean :: [Double] -> Double
@@ -173,7 +174,7 @@ buildWheelLoop positions pos 0 = positions ++ [pos]
 buildWheelLoop positions pos count = buildWheelLoop (positions ++ [turnWheel pos count]) pos (count-1)
 
 wheelLoopFromStartPos :: WheelPosition -> WheelLoop
---wheelLoopFromStartPos pos = buildWheelLoop [] pos $ (length pos) - 1
+wheelLoopFromStartPos pos = buildWheelLoop [] pos $ (length pos) - 1
 
 secLoop :: WheelLoop
 secLoop = wheelLoopFromStartPos second
@@ -278,8 +279,8 @@ initCounter = [0,0,0]
 
 -- incrementCounter = [0,0,0]
 
---getCounterBase = 8
---lazy2startPos = 1
+getCounterBase = 8
+lazy2startPos = 0
 
 getCounter :: Int -> (Int, Counter)
 getCounter x =
@@ -347,9 +348,9 @@ getWheelsPermAnswers n =
 
 findAnswerTest = [ i |
 --  i <- [1..5000000],
---  i <- [1..(getCounterBase*getCounterBase)],
+  i <- [1..(getCounterBase*getCounterBase)],
 --  i <- [1..(10000000)],
-  i <- [1..(1000000)],
+--  i <- [1..(1000000)],
 --  i <- [1..(getCounterBase*getCounterBase*getCounterBase)],
 --  i <- [1..(getCounterBase*getCounterBase*10)],
   let ans = elem (head (getWheelsPermAnswers i)) answers, ans == True]
@@ -362,8 +363,8 @@ findAnswerTest2 =
       perms
       [ i |
       --  i <- [1..5000000],
-      --  i <- [1..(getCounterBase*getCounterBase)],
-        i <- [1..(1000000)],
+        i <- [1..(getCounterBase*getCounterBase)],
+--        i <- [1..(1000000)],
 --        i <- [1..(10000000)],
       --  i <- [1..(getCounterBase*getCounterBase*getCounterBase)],
       --  i <- [1..(getCounterBase*getCounterBase*10)],
