@@ -43,26 +43,25 @@ import Text.Printf
 --first =     [ 2,  3,  4,  5,  6,  1]
 --second =    [ 7,  8,  9, 10, 11, 12]
 --three =     [13, 14, 15, 16, 17, 18]
-----
 --answers =   [21, 24, 27, 30, 33, 36]
 --getCounterBase = 720
 
 --first =     [1,   2,  3,  4,  5,  6,  7]
---first =     [7,   1,  2,  3,  4,  5,  6]
---second =    [8,   9, 10, 11, 12, 13, 14]
---three =     [15, 16, 17, 18, 19, 20, 21]
-----
---answers =   [24, 27, 30, 33, 36, 39, 42] -- for 1..7
+first =     [7,   1,  2,  3,  4,  5,  6]
+second =    [8,   9, 10, 11, 12, 13, 14]
+three =     [15, 16, 17, 18, 19, 20, 21]
+
+answers =   [24, 27, 30, 33, 36, 39, 42] -- for 1..7
 --answers =   [25, 28, 31, 34, 37, 40, 36] -- for first as below
 --first =     [ 2,  3,  4,  5,  6,  7,  1]
---getCounterBase = 5040
+getCounterBase = 5040
 
 
-first =     [6, 5, 5, 6, 5, 4, 5, 4]
-second =    [4, 2, 2, 2, 4, 3, 3, 1]
-three =     [1, 3, 2, 3, 3, 2, 4, 3]
-
-answers = [12, 8, 12, 10, 10, 12, 10, 8]
+--first =     [6, 5, 5, 6, 5, 4, 5, 4]
+--second =    [4, 2, 2, 2, 4, 3, 3, 1]
+--three =     [1, 3, 2, 3, 3, 2, 4, 3]
+--
+--answers = [12, 8, 12, 10, 10, 12, 10, 8]
 
 type WheelPosition    = [Int]
 type WheelLoop        = [WheelPosition]
@@ -106,7 +105,10 @@ dropInt2a n = secLoop
 --        printf "%f\n" (mean [1..d])
 
 main :: IO ()
-main =
+main = methodChoice
+
+methodChoice :: IO ()
+methodChoice =
   let
     results choice =
       case choice of
@@ -114,15 +116,18 @@ main =
         "0" ->        show $ findAnswerLazy2
         "1" ->        show $ head findAnswerLazy3
 --        "2" ->        show $ head findAnswerLazy3a
-        "2" ->        show $ findAnswerLazy3a
+        "2" ->        show $ head findAnswerLazy3a
         "3" ->        show $ findAnswerLazy4 lazy2startPos
         "4" ->        show $ head findSpecificAnswer
+        "5" ->        show $ findSpecificAnswerX
 --        "2" ->        show $ findSpecificAnswer
 --        otherwise ->  show $ head findSpecificAnswerPlusList
         otherwise ->  show $ head $ fst $ head findSpecificAnswerPlusList
   in
     do
-      putStrLn "0 - findAnswerLazy2, 1 - findAnswerLazy3, 2 - findAnswerLazy3a, 3 - findAnswerLazy4, 4 - findSpecificAnswer, 5+ - findSpecificAnswerPlusList"
+      putStrLn
+        ("0 - findAnswerLazy2, 1 - findAnswerLazy3, 2 - findAnswerLazy3a, 3 - findAnswerLazy4," ++
+        " 4 - findSpecificAnswer, 5 - findSpecificAnswerX, 5+ - findSpecificAnswerPlusList")
       input1 <- getLine :: IO String
       putStrLn input1
       putStrLn $ results input1
@@ -153,11 +158,11 @@ main =
 --
 --
 -- use these settings for load testing
---
+
 --secLoop = permutations second
 --thrLoop = permutations three
 --ansLoop = permutations answers
---wheelLoopFromStartPos pos = permutations pos
+wheelLoopFromStartPos pos = permutations pos
 --lazy2startPos = 83000
 --lazy2startPos = 0
 
@@ -174,7 +179,7 @@ buildWheelLoop positions pos 0 = positions ++ [pos]
 buildWheelLoop positions pos count = buildWheelLoop (positions ++ [turnWheel pos count]) pos (count-1)
 
 wheelLoopFromStartPos :: WheelPosition -> WheelLoop
-wheelLoopFromStartPos pos = buildWheelLoop [] pos $ (length pos) - 1
+--wheelLoopFromStartPos pos = buildWheelLoop [] pos $ (length pos) - 1
 
 secLoop :: WheelLoop
 secLoop = wheelLoopFromStartPos second
@@ -252,6 +257,38 @@ displaySpecificAnswers =
 
 
 
+twoWheelPermsIndexed :: [a] -> [(Int, a)]
+twoWheelPermsIndexed perms = zip [1..] perms
+
+twoWheelPermsAdded :: [[Int]] -> [Int]
+twoWheelPermsAdded items = zipWith (+) (head items) (head $ drop 1 items)
+
+mergeTwoWheelPerms :: [[Int]]
+mergeTwoWheelPerms = map twoWheelPermsAdded twoWheelPerms
+
+indexedResults :: [(Int, [Int])]
+indexedResults = twoWheelPermsIndexed mergeTwoWheelPerms
+
+
+--appendTwoWheelPermsX :: WheelPosition -> [LoopsPermutation]
+appendTwoWheelPermsX :: [Int] -> [(Int, [Int])]
+appendTwoWheelPermsX thrPos =
+  map (\(i, twoLoopResults) ->  (i, zipWith (+) twoLoopResults thrPos)) indexedResults
+-- param = [7,8,9]
+-- xs = [[Int]]
+--[ [[1,2,3],[4,5,6],[7,8,9]], [[1,2,3],[5,4,6],[7,8,9]] ...]
+
+threeWheelPermsX :: [(Int, [Int])]
+threeWheelPermsX = concat $ map appendTwoWheelPermsX thrLoop
+
+--findSpecificAnswerX :: [(LoopsPermAnswers, LoopsPermutation)]
+findSpecificAnswerX =
+  let
+    (answerIndex, correctAnswer) =
+      head $ filter (\(idx, answer) -> elem answer ansLoop) threeWheelPermsX
+  in
+    threeWheelsPermsItemByCounter $ getCounter answerIndex
+
 
 -- Lazy
 
@@ -279,7 +316,7 @@ initCounter = [0,0,0]
 
 -- incrementCounter = [0,0,0]
 
-getCounterBase = 8
+--getCounterBase = 8
 lazy2startPos = 0
 
 getCounter :: Int -> (Int, Counter)
