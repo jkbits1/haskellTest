@@ -40,22 +40,22 @@ import Text.Printf
 --getCounterBase = 120
 
 --first =     [ 1,  2,  3,  4,  5,  6]
-first =     [ 2,  3,  4,  5,  6,  1]
-second =    [ 7,  8,  9, 10, 11, 12]
---second =    [ 8,  9, 10, 11, 12,  7]
-three =     [13, 14, 15, 16, 17, 18]
---
-answers =   [21, 24, 27, 30, 33, 36] -- for 1..6
-getCounterBase = 720
+--first =     [ 2,  3,  4,  5,  6,  1]
+--second =    [ 7,  8,  9, 10, 11, 12]
+--three =     [13, 14, 15, 16, 17, 18]
+----
+--answers =   [21, 24, 27, 30, 33, 36]
+--getCounterBase = 720
 
 --first =     [1,   2,  3,  4,  5,  6,  7]
---first =     [7,   1,  2,  3,  4,  5,  6]
---second =    [8,   9, 10, 11, 12, 13, 14]
---three =     [15, 16, 17, 18, 19, 20, 21]
+first =     [7,   1,  2,  3,  4,  5,  6]
+second =    [8,   9, 10, 11, 12, 13, 14]
+three =     [15, 16, 17, 18, 19, 20, 21]
 --
---answers =   [24, 27, 30, 33, 36, 39, 42] -- for 1..7
+answers =   [24, 27, 30, 33, 36, 39, 42] -- for 1..7
 --answers =   [25, 28, 31, 34, 37, 40, 36] -- for first as below
 --first =     [ 2,  3,  4,  5,  6,  7,  1]
+getCounterBase = 5040
 
 
 --first =     [6, 5, 5, 6, 5, 4, 5, 4]
@@ -299,8 +299,8 @@ getCounter x =
           otherwise -> (x, xs)
 
 wheelPermsItem :: Int -> WheelLoop -> WheelPosition
-wheelPermsItem idx loop = head $ drop idx loop
---wheelPermsItem idx loop = loop !! idx
+--wheelPermsItem idx loop = head $ drop idx loop
+wheelPermsItem idx loop = loop !! idx
 
 threeWheelsPermsItemByCounterTest :: (a, Counter) -> (Int, Int)
 threeWheelsPermsItemByCounterTest (_, counter) =
@@ -347,10 +347,27 @@ getWheelsPermAnswers n =
 
 findAnswerTest = [ i |
 --  i <- [1..5000000],
-  i <- [1..(getCounterBase*getCounterBase)],
+--  i <- [1..(getCounterBase*getCounterBase)],
+--  i <- [1..(10000000)],
+  i <- [1..(1000000)],
 --  i <- [1..(getCounterBase*getCounterBase*getCounterBase)],
 --  i <- [1..(getCounterBase*getCounterBase*10)],
   let ans = elem (head (getWheelsPermAnswers i)) answers, ans == True]
+
+findAnswerTest2 =
+  let
+    perms x = getWheelsPermAnswers x
+  in
+    deepseq
+      perms
+      [ i |
+      --  i <- [1..5000000],
+      --  i <- [1..(getCounterBase*getCounterBase)],
+        i <- [1..(1000000)],
+--        i <- [1..(10000000)],
+      --  i <- [1..(getCounterBase*getCounterBase*getCounterBase)],
+      --  i <- [1..(getCounterBase*getCounterBase*10)],
+        let ans = elem (head (perms i)) answers, ans == True]
 
 
 
