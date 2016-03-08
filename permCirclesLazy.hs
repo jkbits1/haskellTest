@@ -115,19 +115,20 @@ methodChoice =
 --        "0" ->        show $ findAnswerLazy2a
         "0" ->        show $ findAnswerLazy2
         "1" ->        show $ head findAnswerLazy3
---        "2" ->        show $ head findAnswerLazy3a
         "2" ->        show $ head findAnswerLazy3a
-        "3" ->        show $ findAnswerLazy4 lazy2startPos
-        "4" ->        show $ head findSpecificAnswer
-        "5" ->        show $ findSpecificAnswerX
+        "3" ->        show $ head findAnswerLazy3b
+        "4" ->        show $ findAnswerLazy4 lazy2startPos
+        "5" ->        show $ head findSpecificAnswer
+        "6" ->        show $ findSpecificAnswerX
 --        "2" ->        show $ findSpecificAnswer
 --        otherwise ->  show $ head findSpecificAnswerPlusList
         otherwise ->  show $ head $ fst $ head findSpecificAnswerPlusList
   in
     do
       putStrLn
-        ("0 - findAnswerLazy2, 1 - findAnswerLazy3, 2 - findAnswerLazy3a, 3 - findAnswerLazy4," ++
-        " 4 - findSpecificAnswer, 5 - findSpecificAnswerX, 5+ - findSpecificAnswerPlusList")
+        ("0 - findAnswerLazy2, 1 - findAnswerLazy3, 2 - findAnswerLazy3a, 3 - findAnswerLazy3b" ++
+        ", 4 - findAnswerLazy4, 5 - findSpecificAnswer, 6 - findSpecificAnswerX" ++
+        ", 5+ - findSpecificAnswerPlusList")
       input1 <- getLine :: IO String
       putStrLn input1
       putStrLn $ results input1
@@ -407,7 +408,9 @@ findAnswerTest2 =
       --  i <- [1..(getCounterBase*getCounterBase*10)],
         let ans = elem (head (perms i)) answers, ans == True]
 
-
+findAnswerTestX =
+  map (\(idx, _) -> idx)
+    $ filter (\(_, answer) -> elem (head answer) answers) threeWheelPermsX
 
 mapTest f xs = foldr (\x ys -> f x : ys) [] xs
 
@@ -482,6 +485,18 @@ findAnswerLazy3a =
 --                                                                        proves is lazy eval
    in
     threeWheelsPermsItemByCounter $ getCounter ansH
+
+findAnswerLazy3b =
+  let
+    ansH =
+      fst $
+      head $
+        dropWhile (\(_, b) -> b == False)
+          $ map (\i -> (i, elem (getWheelsPermAnswers i) ansLoop))
+            findAnswerTestX
+   in
+    threeWheelsPermsItemByCounter $ getCounter ansH
+
 
 findAnswerLazy4 i =
   let
