@@ -118,7 +118,7 @@ methodChoice =
         "2" ->        show $ head findAnswerLazy3a
         "3" ->        show $ head findAnswerLazy3b
         "4" ->        show $ findAnswerLazy4 lazy2startPos
-        "5" ->        show $ head findSpecificAnswer
+        "5" ->        show $ findSpecificAnswer
         "6" ->        show $ findSpecificAnswerX
 --        "2" ->        show $ findSpecificAnswer
 --        otherwise ->  show $ head findSpecificAnswerPlusList
@@ -237,9 +237,12 @@ answersPlusList :: [(LoopsPermAnswers, LoopsPermutation)]
 answersPlusList = concat $ map sumPlusPerm threeWheelPerms
 
 --NOTE: SOLUTION REFACTOR - added this step after created lazy eval solution
-findSpecificAnswer :: [(LoopsPermAnswers, LoopsPermutation)]
+--findSpecificAnswer :: [(LoopsPermAnswers, LoopsPermutation)]
+findSpecificAnswer :: (LoopsPermAnswers, LoopsPermutation)
 findSpecificAnswer =
-    filter (\(answer, _) -> elem answer ansLoop) answersPlusList
+  head $
+    dropWhile (\(answer, _) -> (elem answer ansLoop) == False) answersPlusList
+--    filter (\(answer, _) -> elem answer ansLoop) answersPlusList
 
 answersPermsLoop2 :: ([Int], t) -> ([[Int]], t)
 answersPermsLoop2 (ans, lists) = (wheelLoopFromStartPos ans, lists)
