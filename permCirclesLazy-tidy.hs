@@ -14,44 +14,6 @@ import Text.Printf
 --
 --answers = [12, 15, 18]
 
---
--- assorted load test values
---
-
---first =     [1,  2,  3,  4]
---first =     [2,  3,  4,  1]
---second =    [5,  6,  7,  8]
---three =     [9,  10, 11, 12]
---
---answers =   [15, 18, 21, 24]
---getCounterBase = 24
-
---first =     [ 1,  2,  3,  4,  5]
---first =     [ 2,  3,  4,  5,  1]
---second =    [ 6,  7,  8,  9, 10]
---three =     [11, 12, 13, 14, 15]
---
---answers =   [18, 21, 24, 27, 30]
---getCounterBase = 120
-
---first =     [ 1,  2,  3,  4,  5,  6]
---first =     [ 2,  3,  4,  5,  6,  1]
---second =    [ 7,  8,  9, 10, 11, 12]
---three =     [13, 14, 15, 16, 17, 18]
---answers =   [21, 24, 27, 30, 33, 36]
---getCounterBase = 720
-
---first =     [1,   2,  3,  4,  5,  6,  7]
-first =     [7,   1,  2,  3,  4,  5,  6]
-second =    [8,   9, 10, 11, 12, 13, 14]
-three =     [15, 16, 17, 18, 19, 20, 21]
-
-answers =   [24, 27, 30, 33, 36, 39, 42] -- for 1..7
---answers =   [25, 28, 31, 34, 37, 40, 36] -- for first as below
---first =     [ 2,  3,  4,  5,  6,  7,  1]
-getCounterBase = 5040
-
-
 --first =     [6, 5, 5, 6, 5, 4, 5, 4]
 --second =    [4, 2, 2, 2, 4, 3, 3, 1]
 --three =     [1, 3, 2, 3, 3, 2, 4, 3]
@@ -64,80 +26,6 @@ type LoopsPermutation = [WheelPosition]
 type LoopsPermColumn  = (Int, Int, Int)
 type LoopsPermAnswers = [Int]
 type Counter          = [Int]
-
--- for profiling
--- ghc --make -O2 permCirclesLazy.hs -rtsopts
--- ghc --make -O2 ./permCirclesLazy.hs -prof
--- -auto-all -caf-all -fforce-recomp
--- -rtsopts
---Measure-Command {.\permCirclesLazy.exe 1 +RTS -sstderr -hc -i0 -p}
---main :: IO ()
---main = do
---        [d] <- map read `fmap` getArgs
---------        w <- turnWheel first 1
-------        printf "%d" $ head (turnWheel first d)
-------        printf "%d" $ head (dropInt d first d)
---        printf "%d" $ head (head (head (dropInt2 d)))
-----        printf "%d" $ head (head (dropInt2a d))
-------        printf "%d" head $ head $ head $ (dropInt d)
-------        printf "%d" $ head $ (\d -> twoWheelPerms) d
-------        printf "%d" $ (\v -> 1.0) d
-------        printf "%d\n" (mean [1..d])
-------        printf "%f\n" (mean [1..d])
-
-main :: IO ()
-main = methodChoice
-
-methodChoice :: IO ()
-methodChoice =
-  let
-    results choice =
-      case choice of
---        "0" ->        show $ findAnswerLazy2a
-        "0" ->        show $ findAnswerLazy2
-        "1" ->        show $ head findAnswerLazy3
-        "2" ->        show $ head findAnswerLazy3a
-        "3" ->        show $ head findAnswerLazy3b
-        "4" ->        show $ findAnswerLazy4 lazy2startPos
-        "5" ->        show $ findSpecificAnswer
-        "6" ->        show $ findSpecificAnswerX
-        otherwise ->  show $ head $ fst $ head findSpecificAnswerPlusList
-  in
-    do
-      putStrLn
-        ("0 - findAnswerLazy2, 1 - findAnswerLazy3, 2 - findAnswerLazy3a, 3 - findAnswerLazy3b" ++
-        ", 4 - findAnswerLazy4, 5 - findSpecificAnswer, 6 - findSpecificAnswerX" ++
-        ", 5+ - findSpecificAnswerPlusList")
-      input1 <- getLine :: IO String
-      putStrLn input1
-      putStrLn $ results input1
-
---  --    input2 <- getLine :: IO String
---  --    putStrLn $ show $ dropInt2 1 -- zipp input1 input2
---  --    putStrLn $ show $ secLoop
---  --    putStrLn $ show $ twoWheelPerms
---  --    putStrLn $ show $ threeWheelPerms
---  --    putStrLn $ show $ head findSpecificAnswerPlusList
---  --    putStrLn $ show $ findAnswerLazy3
---  --    putStrLn $ show $ findAnswerLazyBit
---  --    putStrLn $ show $ head $ findAnswerLazyBit
---  --    putStrLn $ show $ length $ findAnswerLazyBit
---  --    putStrLn $ show $ length findAnswerLazyBitSum
---  --    putStrLn $ show $ head findAnswerLazyBitSum
---  --    putStrLn $ show $ findAnswerLazyBitSum
---  --    putStrLn $ show $ findAnswerLazy4  83000 --0
---  --    putStrLn $ show $ head findAnswerLazy
---  --    putStrLn $ show $ getWheelsPermAnswers 1
---
---
--- use these settings for load testing
-
---secLoop = permutations second
---thrLoop = permutations three
---ansLoop = permutations answers
-wheelLoopFromStartPos pos = permutations pos
---lazy2startPos = 83000
---lazy2startPos = 0
 
 turnWheel :: WheelPosition -> Int -> WheelPosition
 turnWheel wheel chunk = (drop chunk wheel) ++ (take chunk wheel)
@@ -204,22 +92,6 @@ findSpecificAnswer :: (LoopsPermAnswers, LoopsPermutation)
 findSpecificAnswer =
   head $
     dropWhile (\(answer, _) -> (elem answer ansLoop) == False) answersPlusList
-
-answersPermsLoop2 :: ([Int], t) -> ([[Int]], t)
-answersPermsLoop2 (ans, lists) = (wheelLoopFromStartPos ans, lists)
-
-answersPermsPlusList :: [([[Int]], [[Int]])]
-answersPermsPlusList = map answersPermsLoop2 answersPlusList
-
--- finds solution
-findSpecificAnswerPlusList :: [([[Int]], [[Int]])]
-findSpecificAnswerPlusList =
-    filter (\(ans, lists) -> elem answers ans) answersPermsPlusList
-
--- display solution
-displaySpecificAnswers =
-    snd $ head findSpecificAnswerPlusList
-
 
 
 twoWheelPermsIndexed :: [a] -> [(Int, a)]
@@ -359,8 +231,6 @@ mapTest f xs = foldr (\x ys -> f x : ys) [] xs
 findAnswerLazyBit = [ item | i <- [0..84600], let item = wheelsTuple $ threeWheelsPermsItemByCounter $ getCounter i]
 
 findAnswerLazyBitSum = map sumTriple $ concat findAnswerLazyBit
-
--- elem (getWheelsPermAnswers 120) ansLoop
 
 --NOTE: Are probs above issues of stack or memory?
 
@@ -517,4 +387,111 @@ testLazy2a = head $ testInf2
 --rotate candidates
 -- getCounter, can it provide hints on twoWheelPerms change points etc?
 --  consider what it genrates, ...
+
+
+--
+-- assorted load test values
+--
+
+--first =     [1,  2,  3,  4]
+--first =     [2,  3,  4,  1]
+--second =    [5,  6,  7,  8]
+--three =     [9,  10, 11, 12]
+--
+--answers =   [15, 18, 21, 24]
+--getCounterBase = 24
+
+--first =     [ 1,  2,  3,  4,  5]
+--first =     [ 2,  3,  4,  5,  1]
+--second =    [ 6,  7,  8,  9, 10]
+--three =     [11, 12, 13, 14, 15]
+--
+--answers =   [18, 21, 24, 27, 30]
+--getCounterBase = 120
+
+--first =     [ 1,  2,  3,  4,  5,  6]
+--first =     [ 2,  3,  4,  5,  6,  1]
+--second =    [ 7,  8,  9, 10, 11, 12]
+--three =     [13, 14, 15, 16, 17, 18]
+--answers =   [21, 24, 27, 30, 33, 36]
+--getCounterBase = 720
+
+--first =     [1,   2,  3,  4,  5,  6,  7]
+first =     [7,   1,  2,  3,  4,  5,  6]
+second =    [8,   9, 10, 11, 12, 13, 14]
+three =     [15, 16, 17, 18, 19, 20, 21]
+
+answers =   [24, 27, 30, 33, 36, 39, 42] -- for 1..7
+--answers =   [25, 28, 31, 34, 37, 40, 36] -- for first as below
+--first =     [ 2,  3,  4,  5,  6,  7,  1]
+getCounterBase = 5040
+
+-- for profiling
+-- ghc --make -O2 permCirclesLazy.hs -rtsopts
+-- ghc --make -O2 ./permCirclesLazy.hs -prof
+-- -auto-all -caf-all -fforce-recomp
+-- -rtsopts
+--Measure-Command {.\permCirclesLazy.exe 1 +RTS -sstderr -hc -i0 -p}
+--main :: IO ()
+--main = do
+--        [d] <- map read `fmap` getArgs
+--------        w <- turnWheel first 1
+------        printf "%d" $ head (turnWheel first d)
+------        printf "%d" $ head (dropInt d first d)
+--        printf "%d" $ head (head (head (dropInt2 d)))
+----        printf "%d" $ head (head (dropInt2a d))
+------        printf "%d" head $ head $ head $ (dropInt d)
+------        printf "%d" $ head $ (\d -> twoWheelPerms) d
+------        printf "%d" $ (\v -> 1.0) d
+------        printf "%d\n" (mean [1..d])
+------        printf "%f\n" (mean [1..d])
+
+
+main :: IO ()
+main = methodChoice
+
+methodChoice :: IO ()
+methodChoice =
+  let
+    results choice =
+      case choice of
+--        "0" ->        show $ findAnswerLazy2a
+        "0" ->        show $ findAnswerLazy2
+        "1" ->        show $ head findAnswerLazy3
+        "2" ->        show $ head findAnswerLazy3a
+        "3" ->        show $ head findAnswerLazy3b
+        "4" ->        show $ findAnswerLazy4 lazy2startPos
+        "5" ->        show $ findSpecificAnswer
+        "6" ->        show $ findSpecificAnswerX
+        otherwise ->  show $ head $ fst $ head findSpecificAnswerPlusList
+  in
+    do
+      putStrLn
+        ("0 - findAnswerLazy2, 1 - findAnswerLazy3, 2 - findAnswerLazy3a, 3 - findAnswerLazy3b" ++
+        ", 4 - findAnswerLazy4, 5 - findSpecificAnswer, 6 - findSpecificAnswerX" ++
+        ", 5+ - findSpecificAnswerPlusList")
+      input1 <- getLine :: IO String
+      putStrLn input1
+      putStrLn $ results input1
+
+--  --    input2 <- getLine :: IO String
+--  --    putStrLn $ show $ head findSpecificAnswerPlusList
+--  --    putStrLn $ show $ findAnswerLazyBit
+--  --    putStrLn $ show $ head $ findAnswerLazyBit
+--  --    putStrLn $ show $ length $ findAnswerLazyBit
+--  --    putStrLn $ show $ length findAnswerLazyBitSum
+--  --    putStrLn $ show $ head findAnswerLazyBitSum
+--  --    putStrLn $ show $ findAnswerLazyBitSum
+--  --    putStrLn $ show $ findAnswerLazy4  83000 --0
+--
+--
+
+-- use these settings for load testing
+
+--secLoop = permutations second
+--thrLoop = permutations three
+--ansLoop = permutations answers
+wheelLoopFromStartPos pos = permutations pos
+--lazy2startPos = 83000
+--lazy2startPos = 0
 
