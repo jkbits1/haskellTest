@@ -1,11 +1,12 @@
---import Control.DeepSeq
-
 import Data.List
 import Numeric
 
 -- for profiling
 import System.Environment
 import Text.Printf
+
+getCounterBase = 8
+lazy2startPos = 0
 
 -- test data that is easier to visualise and debug
 --first =     [1,2,3]
@@ -14,11 +15,11 @@ import Text.Printf
 --
 --answers = [12, 15, 18]
 
---first =     [6, 5, 5, 6, 5, 4, 5, 4]
---second =    [4, 2, 2, 2, 4, 3, 3, 1]
---three =     [1, 3, 2, 3, 3, 2, 4, 3]
---
---answers = [12, 8, 12, 10, 10, 12, 10, 8]
+first =     [6, 5, 5, 6, 5, 4, 5, 4]
+second =    [4, 2, 2, 2, 4, 3, 3, 1]
+three =     [1, 3, 2, 3, 3, 2, 4, 3]
+
+answers = [12, 8, 12, 10, 10, 12, 10, 8]
 
 type WheelPosition    = [Int]
 type WheelLoop        = [WheelPosition]
@@ -39,7 +40,7 @@ buildWheelLoop positions pos count =
     buildWheelLoop nextPositions pos (count-1)
 
 wheelLoopFromStartPos :: WheelPosition -> WheelLoop
---wheelLoopFromStartPos pos = buildWheelLoop [] pos $ (length pos) - 1
+wheelLoopFromStartPos pos = buildWheelLoop [] pos $ (length pos) - 1
 
 secLoop :: WheelLoop
 secLoop = wheelLoopFromStartPos second
@@ -55,7 +56,6 @@ ansLoop = wheelLoopFromStartPos answers
 
 twoWheelPerms :: [LoopsPermutation]
 twoWheelPerms = map (\secPos -> first : secPos : []) secLoop
---twoWheelPerms = map attachInnerList secLoop
 -- result - [ [[1,2,3], [4,5,6]],
 --            [[1,2,3], [5,6,4]], ...]
 
@@ -64,7 +64,6 @@ appendTwoWheelPerms :: WheelPosition -> [LoopsPermutation]
 appendTwoWheelPerms thrPos =
   map (\twoLoopPerm ->  twoLoopPerm ++ [thrPos]) twoWheelPerms
 -- param = [7,8,9]
--- xs = [[Int]]
 --[ [[1,2,3],[4,5,6],[7,8,9]], [[1,2,3],[5,4,6],[7,8,9]] ...]
 
 threeWheelPerms :: [LoopsPermutation]
@@ -90,8 +89,6 @@ sumPlusPerm perm = [(map sumTriple $ columnsFromPerm perm, perm)]
 answersPlusList :: [(LoopsPermAnswers, LoopsPermutation)]
 answersPlusList = concat $ map sumPlusPerm threeWheelPerms
 
---NOTE: SOLUTION REFACTOR - added this step after created lazy eval solution
---findSpecificAnswer :: [(LoopsPermAnswers, LoopsPermutation)]
 findSpecificAnswer :: (LoopsPermAnswers, LoopsPermutation)
 findSpecificAnswer =
   head $
@@ -110,19 +107,15 @@ mergeTwoWheelPerms = map twoWheelPermsAdded twoWheelPerms
 indexedResults :: [(Int, [Int])]
 indexedResults = twoWheelPermsIndexed mergeTwoWheelPerms
 
-
---appendTwoWheelPermsX :: WheelPosition -> [LoopsPermutation]
 appendTwoWheelPermsX :: [Int] -> [(Int, [Int])]
 appendTwoWheelPermsX thrPos =
   map (\(i, twoLoopResults) ->  (i, zipWith (+) twoLoopResults thrPos)) indexedResults
 -- param = [7,8,9]
--- xs = [[Int]]
 --[ [[1,2,3],[4,5,6],[7,8,9]], [[1,2,3],[5,4,6],[7,8,9]] ...]
 
 threeWheelPermsX :: [(Int, [Int])]
 threeWheelPermsX = concat $ map appendTwoWheelPermsX thrLoop
 
---findSpecificAnswerX :: [(LoopsPermAnswers, LoopsPermutation)]
 findSpecificAnswerX =
   let
     (answerIndex, correctAnswer) =
@@ -130,8 +123,6 @@ findSpecificAnswerX =
   in
     threeWheelsPermsItemByCounter $ getCounter answerIndex
 
-
--- Lazy
 
 -- | Returns the digits of a positive integer as a list, in reverse order.
 --   This is slightly more efficient than in forward order.
@@ -155,8 +146,6 @@ digits base = reverse . digitsRev base
 initCounter :: Counter
 initCounter = [0,0,0]
 
---getCounterBase = 8
-lazy2startPos = 0
 
 getCounter :: Int -> (Int, Counter)
 getCounter x =
@@ -173,15 +162,6 @@ getCounter x =
 
 wheelPermsItem :: Int -> WheelLoop -> WheelPosition
 wheelPermsItem idx loop = head $ drop idx loop
-
-threeWheelsPermsItemByCounterTest :: (a, Counter) -> (Int, Int)
-threeWheelsPermsItemByCounterTest (_, counter) =
-  let
-    sec_idx = head counter
-    thr_idx = head $ drop 1 counter
-   in
-    (sec_idx, thr_idx)
-
 
 threeWheelsPermsItemByCounter :: (a, Counter) -> LoopsPermutation
 threeWheelsPermsItemByCounter (_, counter) =
@@ -207,66 +187,31 @@ getWheelsPermAnswers :: Int -> LoopsPermAnswers
 getWheelsPermAnswers n =
   mapTest sumTriple $ wheelsTuple $ threeWheelsPermsItemByCounter $ getCounter n
 
+
 --experiments
 
 
 findAnswerTest = [ i |
   i <- [1..(getCounterBase*getCounterBase)],
---  i <- [1..(10000000)],
   let ans = elem (head (getWheelsPermAnswers i)) answers, ans == True]
-
---findAnswerTest2 =
---  let
---    perms x = getWheelsPermAnswers x
---  in
---    deepseq
---      perms
---      [ i |
---        i <- [1..(getCounterBase*getCounterBase)],
---        i <- [1..(10000000)],
---        let ans = elem (head (perms i)) answers, ans == True]
 
 findAnswerTestX =
   map (\(idx, _) -> idx)
     $ filter (\(_, answer) -> elem (head answer) answers) threeWheelPermsX
 
-mapTest f xs = foldr (\x ys -> f x : ys) [] xs
+--mapTest f xs = foldr (\x ys -> f x : ys) [] xs
 
-findAnswerLazyBit = [ item | i <- [0..84600], let item = wheelsTuple $ threeWheelsPermsItemByCounter $ getCounter i]
 
-findAnswerLazyBitSum = map sumTriple $ concat findAnswerLazyBit
-
---NOTE: Are probs above issues of stack or memory?
-
---NOTE: type of stack-efficient solutions - whether tail recursion etc
--- NOTE: efficient, but not lazy - fn doesn't stop at the answer, but won't blow out stack
 -- NOTE <- is a generator
-findAnswerLazy = [ i | i <- [0..], let ans = elem (getWheelsPermAnswers i) ansLoop, ans == True]
 
--- NOTE: Lazy
 -- gets first true result, but otherwise has no stopping condition
-findAnswerLazy2 =
+findAnswerCS2 =
   take 1 [
     i |
-      i <- [lazy2startPos..], let ans = elem (getWheelsPermAnswers i) ansLoop, ans == True]
+      i <- [0..], let ans = elem (getWheelsPermAnswers i) ansLoop, ans == True]
 
---findAnswerLazy2a =
---  let
---    permAnswers i = (getWheelsPermAnswers i)
---  in
---    seq
---    deepseq
---      permAnswers
---      take 1 [
---        i |
---          i <- [lazy2startPos..], let ans = elem (permAnswers i) ansLoop, ans == True]
-
--- this is list comprehension rewritten, and is efficient. however, it does go through
--- entire sets of perms several times NOTE: MAYBE NOT, see fns below
--- ?? how to rewrite this in a lazy eval method? does a take x at each stage help? or not needed
---      may have to merge stages etc
--- ?? how to rewrite list comp in a lazy eval method?
-findAnswerLazy3 =
+-- list comprehension rewritten
+findAnswerCS3 =
   let
     ansH =
       fst $
@@ -277,18 +222,14 @@ findAnswerLazy3 =
    in
     threeWheelsPermsItemByCounter $ getCounter ansH
 
-findAnswerLazy3a =
+findAnswerCS3a =
   let
     ansH =
       fst $
       head $
         dropWhile (\(_, b) -> b == False)
           $ map (\i -> (i, elem (getWheelsPermAnswers i) ansLoop))
---              [1..512]
---              [1..]
             findAnswerTest
---                                                                  NOTE: [1..] works too,
---                                                                        proves is lazy eval
    in
     threeWheelsPermsItemByCounter $ getCounter ansH
 
@@ -303,45 +244,6 @@ findAnswerLazy3b =
    in
     threeWheelsPermsItemByCounter $ getCounter ansH
 
-
---findAnswerLazy4 i =
---  let
---    item = wheelsTuple $ threeWheelsPermsItemByCounter $ getCounter i
---    ans = map sumTriple item
---    found = elem ans ansLoop
---    processFound found =
---      case found of
---        True -> i
---        False -> findAnswerLazy4 $ i + 1
---  in
---    deepseq
---      found
---      processFound found
-
---findAnswerLazy5 start =
---  let
---    checked = findAnswerTest
---    findAnswerLazy4a i checked =
---      case elem i checked of
---        False -> findAnswerLazy4a (i + 1) checked
---        True ->
---          let
---            item = wheelsTuple $ threeWheelsPermsItemByCounter $ getCounter i
---            ans = map sumTriple item
---            found = elem ans ansLoop
---            processFound found =
---              case found of
---                True -> i
---                False -> findAnswerLazy4a (i + 1) checked
-          --    found
---          in
---            deepseq
---              found
---              processFound found
---  in
---    findAnswerLazy4a start checked
-
-
 testInf0 = [1..]
 testLazy0 = take 1 $ testInf0
 
@@ -351,46 +253,6 @@ testLazy = take 1 $ testInf
 testInf2 = filter (\y -> y > 5) $ map (\x -> x+ 1) [1..]
 testLazy2 = take 1 $ testInf2
 testLazy2a = head $ testInf2
-
-
---tail-recursion version
-
-
-
-
---
---PREPARATORY WORK
---
-
-
--- given two wheels perms and actual answer, create list of diffs
--- create perms of last wheel, then iterate through diffs for a match
-
---sumTwoLists :: [[Int]] -> [Int]
---sumTwoLists lists =
---    let list1   = head lists
---        list2   = head $ drop 1 lists
---        tups    = zip list1 list2
---    in
---        map (\(x, y) -> x + y) tups
-
---summedTwoLists :: [[Int]]
---summedTwoLists = map sumTwoLists twoWheelPerms
-
---createCandidate list =
---    let tuples = zip list answers
---    in
---        map (\t -> minusTuple t) tuples
---
---candidates = map createCandidate summedTwoLists
-
-
---NOTE ideas,
---filter second third etc
---filter duplicates, can we predict, eg from twoPerms ?
---rotate candidates
--- getCounter, can it provide hints on twoWheelPerms change points etc?
---  consider what it genrates, ...
 
 
 --
@@ -421,14 +283,14 @@ testLazy2a = head $ testInf2
 --getCounterBase = 720
 
 --first =     [1,   2,  3,  4,  5,  6,  7]
-first =     [7,   1,  2,  3,  4,  5,  6]
-second =    [8,   9, 10, 11, 12, 13, 14]
-three =     [15, 16, 17, 18, 19, 20, 21]
+--first =     [7,   1,  2,  3,  4,  5,  6]
+--second =    [8,   9, 10, 11, 12, 13, 14]
+--three =     [15, 16, 17, 18, 19, 20, 21]
 
-answers =   [24, 27, 30, 33, 36, 39, 42] -- for 1..7
+--answers =   [24, 27, 30, 33, 36, 39, 42] -- for 1..7
 --answers =   [25, 28, 31, 34, 37, 40, 36] -- for first as below
 --first =     [ 2,  3,  4,  5,  6,  7,  1]
-getCounterBase = 5040
+--getCounterBase = 5040
 
 -- for profiling
 -- ghc --make -O2 permCirclesLazy.hs -rtsopts
@@ -436,20 +298,6 @@ getCounterBase = 5040
 -- -auto-all -caf-all -fforce-recomp
 -- -rtsopts
 --Measure-Command {.\permCirclesLazy.exe 1 +RTS -sstderr -hc -i0 -p}
---main :: IO ()
---main = do
---        [d] <- map read `fmap` getArgs
---------        w <- turnWheel first 1
-------        printf "%d" $ head (turnWheel first d)
-------        printf "%d" $ head (dropInt d first d)
---        printf "%d" $ head (head (head (dropInt2 d)))
-----        printf "%d" $ head (head (dropInt2a d))
-------        printf "%d" head $ head $ head $ (dropInt d)
-------        printf "%d" $ head $ (\d -> twoWheelPerms) d
-------        printf "%d" $ (\v -> 1.0) d
-------        printf "%d\n" (mean [1..d])
-------        printf "%f\n" (mean [1..d])
-
 
 main :: IO ()
 main = methodChoice
@@ -459,43 +307,27 @@ methodChoice =
   let
     results choice =
       case choice of
---        "0" ->        show $ findAnswerLazy2a
-        "0" ->        show $ findAnswerLazy2
-        "1" ->        show $ head findAnswerLazy3
-        "2" ->        show $ head findAnswerLazy3a
-        "3" ->        show $ head findAnswerLazy3b
---        "4" ->        show $ findAnswerLazy4 lazy2startPos
+        "0" ->        show $ findAnswerCS2
+        "1" ->        show $ head findAnswerCS3
+        "2" ->        show $ head findAnswerCS3a
+        "3" ->        show $ head findAnswerCS3b
         "5" ->        show $ findSpecificAnswer
         "6" ->        show $ findSpecificAnswerX
---        otherwise ->  show $ head $ fst $ head findSpecificAnswerPlusList
   in
     do
       putStrLn
-        ("0 - findAnswerLazy2, 1 - findAnswerLazy3, 2 - findAnswerLazy3a, 3 - findAnswerLazy3b" ++
-        ", 4 - findAnswerLazy4, 5 - findSpecificAnswer, 6 - findSpecificAnswerX" ++
-        ", 5+ - findSpecificAnswerPlusList")
+        ("0 - findAnswerCS2, 1 - findAnswerCS3, 2 - findAnswerCS3a, 3 - findAnswerCS3b" ++
+        ", 5 - findSpecificAnswer, 6 - findSpecificAnswerX")
       input1 <- getLine :: IO String
       putStrLn input1
       putStrLn $ results input1
 
---  --    input2 <- getLine :: IO String
---  --    putStrLn $ show $ head findSpecificAnswerPlusList
---  --    putStrLn $ show $ findAnswerLazyBit
---  --    putStrLn $ show $ head $ findAnswerLazyBit
---  --    putStrLn $ show $ length $ findAnswerLazyBit
---  --    putStrLn $ show $ length findAnswerLazyBitSum
---  --    putStrLn $ show $ head findAnswerLazyBitSum
---  --    putStrLn $ show $ findAnswerLazyBitSum
---  --    putStrLn $ show $ findAnswerLazy4  83000 --0
---
---
+
 
 -- use these settings for load testing
 
 --secLoop = permutations second
 --thrLoop = permutations three
 --ansLoop = permutations answers
-wheelLoopFromStartPos pos = permutations pos
---lazy2startPos = 83000
---lazy2startPos = 0
+--wheelLoopFromStartPos pos = permutations pos
 
