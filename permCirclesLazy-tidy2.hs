@@ -187,6 +187,7 @@ getWheelsPermAnswers :: Int -> LoopsPermAnswers
 getWheelsPermAnswers n =
   mapTest sumTriple $ wheelsTuple $ threeWheelsPermsItemByCounter $ getCounter n
 
+mapTest f xs = foldr (\x ys -> f x : ys) [] xs
 
 --experiments
 
@@ -233,7 +234,7 @@ findAnswerCS3a =
    in
     threeWheelsPermsItemByCounter $ getCounter ansH
 
-findAnswerLazy3b =
+findAnswerCS3b =
   let
     ansH =
       fst $
@@ -243,16 +244,6 @@ findAnswerLazy3b =
             findAnswerTestX
    in
     threeWheelsPermsItemByCounter $ getCounter ansH
-
-testInf0 = [1..]
-testLazy0 = take 1 $ testInf0
-
-testInf = map (\x -> x+ 1) [1..]
-testLazy = take 1 $ testInf
-
-testInf2 = filter (\y -> y > 5) $ map (\x -> x+ 1) [1..]
-testLazy2 = take 1 $ testInf2
-testLazy2a = head $ testInf2
 
 
 --
