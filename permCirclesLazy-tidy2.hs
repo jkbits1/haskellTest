@@ -6,7 +6,7 @@ import System.Environment
 import Text.Printf
 
 getCounterBase = 8
-lazy2startPos = 0
+--lazy2startPos = 0
 
 -- test data that is easier to visualise and debug
 --first =     [1,2,3]
@@ -95,6 +95,8 @@ findSpecificAnswer =
     dropWhile (\(answer, _) -> (elem answer ansLoop) == False) answersPlusList
 
 
+-- 3rd solution, merges perms
+
 twoWheelPermsIndexed :: [a] -> [(Int, a)]
 twoWheelPermsIndexed perms = zip [1..] perms
 
@@ -123,6 +125,8 @@ findSpecificAnswerX =
   in
     threeWheelsPermsItemByCounter $ getCounter answerIndex
 
+
+-- 2nd solution, works in constant space
 
 -- | Returns the digits of a positive integer as a list, in reverse order.
 --   This is slightly more efficient than in forward order.
@@ -189,59 +193,33 @@ getWheelsPermAnswers n =
 
 mapTest f xs = foldr (\x ys -> f x : ys) [] xs
 
---experiments
 
-
-findAnswerTest = [ i |
-  i <- [1..(getCounterBase*getCounterBase)],
-  let ans = elem (head (getWheelsPermAnswers i)) answers, ans == True]
-
-findAnswerTestX =
-  map (\(idx, _) -> idx)
-    $ filter (\(_, answer) -> elem (head answer) answers) threeWheelPermsX
-
---mapTest f xs = foldr (\x ys -> f x : ys) [] xs
-
-
--- NOTE <- is a generator
+-- create a list that has ruled out failures by a quick check of one value
+findAnswerTest =
+  [ i |
+        i <- [0..(getCounterBase*getCounterBase)],
+        let ans = elem (head (getWheelsPermAnswers i)) answers,
+        ans == True ]
 
 -- gets first true result, but otherwise has no stopping condition
-findAnswerCS2 =
-  take 1 [
-    i |
-      i <- [0..], let ans = elem (getWheelsPermAnswers i) ansLoop, ans == True]
+findAnswerCS1 =
+  take 1 [ i |
+              i <- [0..],
+              let ans = elem (getWheelsPermAnswers i) ansLoop,
+              ans == True ]
+
+findAnswerCS2a  = findAnswerCS2base [0..]
+findAnswerCS2b  = findAnswerCS2base findAnswerTest
 
 -- list comprehension rewritten
-findAnswerCS3 =
+findAnswerCS2base xs =
   let
     ansH =
       fst $
       head $
         dropWhile (\(_, b) -> b == False)
           $ map (\i -> (i, elem (getWheelsPermAnswers i) ansLoop))
-            [1..]
-   in
-    threeWheelsPermsItemByCounter $ getCounter ansH
-
-findAnswerCS3a =
-  let
-    ansH =
-      fst $
-      head $
-        dropWhile (\(_, b) -> b == False)
-          $ map (\i -> (i, elem (getWheelsPermAnswers i) ansLoop))
-            findAnswerTest
-   in
-    threeWheelsPermsItemByCounter $ getCounter ansH
-
-findAnswerCS3b =
-  let
-    ansH =
-      fst $
-      head $
-        dropWhile (\(_, b) -> b == False)
-          $ map (\i -> (i, elem (getWheelsPermAnswers i) ansLoop))
-            findAnswerTestX
+            xs
    in
     threeWheelsPermsItemByCounter $ getCounter ansH
 
@@ -277,18 +255,9 @@ findAnswerCS3b =
 --first =     [7,   1,  2,  3,  4,  5,  6]
 --second =    [8,   9, 10, 11, 12, 13, 14]
 --three =     [15, 16, 17, 18, 19, 20, 21]
-
+--
 --answers =   [24, 27, 30, 33, 36, 39, 42] -- for 1..7
---answers =   [25, 28, 31, 34, 37, 40, 36] -- for first as below
---first =     [ 2,  3,  4,  5,  6,  7,  1]
 --getCounterBase = 5040
-
--- for profiling
--- ghc --make -O2 permCirclesLazy.hs -rtsopts
--- ghc --make -O2 ./permCirclesLazy.hs -prof
--- -auto-all -caf-all -fforce-recomp
--- -rtsopts
---Measure-Command {.\permCirclesLazy.exe 1 +RTS -sstderr -hc -i0 -p}
 
 main :: IO ()
 main = methodChoice
@@ -298,27 +267,21 @@ methodChoice =
   let
     results choice =
       case choice of
-        "0" ->        show $ findAnswerCS2
-        "1" ->        show $ head findAnswerCS3
-        "2" ->        show $ head findAnswerCS3a
-        "3" ->        show $ head findAnswerCS3b
-        "5" ->        show $ findSpecificAnswer
-        "6" ->        show $ findSpecificAnswerX
+        "0" ->        show $ findAnswerCS1
+        "1" ->        show $ head findAnswerCS2a
+        "2" ->        show $ head findAnswerCS2b
+        "3" ->        show $ findSpecificAnswer
+        "4" ->        show $ findSpecificAnswerX
   in
     do
       putStrLn
-        ("0 - findAnswerCS2, 1 - findAnswerCS3, 2 - findAnswerCS3a, 3 - findAnswerCS3b" ++
-        ", 5 - findSpecificAnswer, 6 - findSpecificAnswerX")
+        ("0 - findAnswerCS1, 1 - findAnswerCS2a, 2 - findAnswerCS2b, " ++
+        ", 3 - findSpecificAnswer, 4 - findSpecificAnswerX")
       input1 <- getLine :: IO String
       putStrLn input1
       putStrLn $ results input1
 
 
-
 -- use these settings for load testing
-
---secLoop = permutations second
---thrLoop = permutations three
---ansLoop = permutations answers
 --wheelLoopFromStartPos pos = permutations pos
 
