@@ -164,12 +164,7 @@ firstParse ==> secondParser =
 firstParse ==>> secondParser =
   Parse chainedParser 
     where
-      chainedParser initState = 
-        case runParse firstParse initState of
-          Left errMessage ->
-            Left errMessage
-          Right (firstResult, newState) ->
-            runParse (secondParser firstResult) newState
+      chainedParser = chainedParserBuilder firstParse secondParser
 
 chainedParserBuilder :: Parse a -> (a -> Parse a1) -> 
                           ParseState -> Either String (a1, ParseState)
