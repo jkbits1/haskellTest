@@ -158,12 +158,7 @@ putState s = Parse $ \_ -> Right ((), s)
 firstParse ==> secondParser =
   Parse chainedParser 
     where
-      chainedParser initState = 
-        case runParse firstParse initState of
-          Left errMessage ->
-            Left errMessage
-          Right (firstResult, newState) ->
-            runParse (secondParser firstResult) newState
+      chainedParser = chainedParserBuilder firstParse secondParser
 
 (==>>) :: Parse () -> (() -> Parse Word8) -> Parse Word8
 firstParse ==>> secondParser =
@@ -175,6 +170,16 @@ firstParse ==>> secondParser =
             Left errMessage
           Right (firstResult, newState) ->
             runParse (secondParser firstResult) newState
+
+chainedParserBuilder :: Parse a -> (a -> Parse a1) -> 
+                          ParseState -> Either String (a1, ParseState)
+chainedParserBuilder firstParse secondParser initState = 
+  case runParse firstParse initState of
+    Left errMessage ->
+      Left errMessage
+    Right (firstResult, newState) ->
+      runParse (secondParser firstResult) newState
+
 
 -- parse parseByte $ L8.pack "P5"
 -- parse parseByte $ L8.pack "P5  1 2 200 321"
