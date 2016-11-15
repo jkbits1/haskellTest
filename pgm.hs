@@ -1,6 +1,8 @@
 import qualified Data.ByteString.Lazy.Char8 as L8
 import qualified Data.ByteString.Lazy as L
 import Data.Char (isSpace)
+import Data.Int (Int64)
+import Data.Word (Word8)
 
 data Greymap = Greymap {
   greyWidth :: Int
@@ -92,4 +94,92 @@ parseP5_take2 s =
   (getBytes (width * height) . snd) >>?
   \(bitmap, s) -> Just (Greymap width height maxGrey bitmap, s)
 
+data ParseState = ParseState {
+  string :: L.ByteString
+, offset :: Int64
+} deriving (Show)
+
+-- simpleParse :: ParseState -> (a, ParseState)
+-- simpleParse =
+
+-- betterParse :: ParseState -> Either String (a, ParseState)
+-- betterParse =
+
+newtype Parse a = Parse { 
+  runParse :: ParseState -> Either String (a, ParseState)
+}
+
+identity :: a -> Parse a
+identity a = Parse $ \s -> Right (a, s)
+
+parse :: Parse a -> L.ByteString -> Either String a
+parse parser initState =
+  case runParse parser (ParseState initState 0) of
+    Left err          -> Left err
+    Right (result, _) -> Right result
+
+-- parse (identity 1) $ L8.pack ""
+
+modifyOffset :: ParseState -> Int64 -> ParseState
+modifyOffset initState newOffset =
+  initState { offset = newOffset }
+
+-- let before = ParseState (L8.pack "foo") 0
+-- let after = modifyOffset before 3
+
+bail :: String -> Parse a
+bail err = Parse $ 
+  \s -> Left $ "byte offset " ++ show (offset s) ++ ": " ++ err
+
+parseByte :: Parse Word8
+parseByte = 
+  getState ==> secondParser1
+
+secondParser1 :: ParseState -> Parse Word8
+secondParser1 initState = 
+  -- \initState ->
+      case L.uncons (string initState) of
+        Nothing -> bail "no more input"
+        Just (byte, remainder) ->
+          putState newState ==>> \_ ->
+          identity byte
+          where 
+            newState  = initState { string = remainder, offset = newOffset }
+            newOffset = offset initState + 1 
+
+getState :: Parse ParseState
+getState = Parse $ \s -> Right (s, s)
+
+putState :: ParseState -> Parse ()
+putState s = Parse $ \_ -> Right ((), s)
+
+-- (==>) :: Parse a -> (a -> Parse b) -> Parse b
+(==>) :: Parse ParseState -> (ParseState -> Parse Word8) -> Parse Word8
+firstParse ==> secondParser =
+  Parse chainedParser 
+    where
+      chainedParser initState = 
+        case runParse firstParse initState of
+          Left errMessage ->
+            Left errMessage
+          Right (firstResult, newState) ->
+            runParse (secondParser firstResult) newState
+
+(==>>) :: Parse () -> (() -> Parse Word8) -> Parse Word8
+firstParse ==>> secondParser =
+  Parse chainedParser 
+    where
+      chainedParser initState = 
+        case runParse firstParse initState of
+          Left errMessage ->
+            Left errMessage
+          Right (firstResult, newState) ->
+            runParse (secondParser firstResult) newState
+
+-- parse parseByte $ L8.pack "P5"
+-- parse parseByte $ L8.pack "P5  1 2 200 321"
+
+
+
   
+
