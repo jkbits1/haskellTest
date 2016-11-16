@@ -133,19 +133,19 @@ bail err = Parse $
 
 parseByte :: Parse Word8
 parseByte = 
-  getState ==> secondParser1
+  getState ==> parseSingleByte
 
-secondParser1 :: ParseState -> Parse Word8
-secondParser1 initState = 
+parseSingleByte :: ParseState -> Parse Word8
+parseSingleByte state = 
   -- \initState ->
-      case L.uncons (string initState) of
+      case L.uncons (string state) of
         Nothing -> bail "no more input"
         Just (byte, remainder) ->
           putState newState ==>> \_ ->
           identity byte
           where 
-            newState  = initState { string = remainder, offset = newOffset }
-            newOffset = offset initState + 1 
+            newState  = state { string = remainder, offset = newOffset }
+            newOffset = offset state + 1 
 
 getState :: Parse ParseState
 getState = Parse $ \s -> Right (s, s)
@@ -156,19 +156,19 @@ putState s = Parse $ \_ -> Right ((), s)
 -- (==>) :: Parse a -> (a -> Parse b) -> Parse b
 (==>) :: Parse ParseState -> (ParseState -> Parse Word8) -> Parse Word8
 firstParse ==> secondParser =
-  Parse chainedParser 
+  Parse parserChain 
     where
-      chainedParser = chainedParserBuilder firstParse secondParser
+      parserChain = parserChainBuilder firstParse secondParser
 
 (==>>) :: Parse () -> (() -> Parse Word8) -> Parse Word8
 firstParse ==>> secondParser =
-  Parse chainedParser 
+  Parse parserChain 
     where
-      chainedParser = chainedParserBuilder firstParse secondParser
+      parserChain = parserChainBuilder firstParse secondParser
 
-chainedParserBuilder :: Parse a -> (a -> Parse a1) -> 
+parserChainBuilder :: Parse a -> (a -> Parse a1) -> 
                           ParseState -> Either String (a1, ParseState)
-chainedParserBuilder firstParse secondParser initState = 
+parserChainBuilder firstParse secondParser initState = 
   case runParse firstParse initState of
     Left errMessage ->
       Left errMessage
@@ -176,8 +176,9 @@ chainedParserBuilder firstParse secondParser initState =
       runParse (secondParser firstResult) newState
 
 
--- parse parseByte $ L8.pack "P5"
+main = putStr $ show $ parse parseByte $ L8.pack "P5"
 -- parse parseByte $ L8.pack "P5  1 2 200 321"
+
 
 
 
