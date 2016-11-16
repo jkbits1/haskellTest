@@ -113,16 +113,16 @@ identity :: a -> Parse a
 identity a = Parse $ \s -> Right (a, s)
 
 parse :: Parse a -> L.ByteString -> Either String a
-parse parser initState =
-  case runParse parser (ParseState initState 0) of
+parse parser state =
+  case runParse parser (ParseState state 0) of
     Left err          -> Left err
     Right (result, _) -> Right result
 
 -- parse (identity 1) $ L8.pack ""
 
 modifyOffset :: ParseState -> Int64 -> ParseState
-modifyOffset initState newOffset =
-  initState { offset = newOffset }
+modifyOffset state newOffset =
+  state { offset = newOffset }
 
 -- let before = ParseState (L8.pack "foo") 0
 -- let after = modifyOffset before 3
@@ -137,7 +137,7 @@ parseByte =
 
 parseSingleByte :: ParseState -> Parse Word8
 parseSingleByte state = 
-  -- \initState ->
+  -- \state ->
       case L.uncons (string state) of
         Nothing -> bail "no more input"
         Just (byte, remainder) ->
@@ -168,17 +168,18 @@ firstParse ==>> secondParser =
 
 parserChainBuilder :: Parse a -> (a -> Parse a1) -> 
                           ParseState -> Either String (a1, ParseState)
-parserChainBuilder firstParse secondParser initState = 
-  case runParse firstParse initState of
+parserChainBuilder firstParse secondParser state = 
+  case runParse firstParse state of
     Left errMessage ->
       Left errMessage
     Right (firstResult, newState) ->
       runParse (secondParser firstResult) newState
 
-
 main = putStr $ show $ parse parseByte $ L8.pack "P5"
 -- parse parseByte $ L8.pack "P5  1 2 200 321"
 
+-- :step parse parseByte $ L8.pack "P5"
+-- :set stop :list
 
 
 
