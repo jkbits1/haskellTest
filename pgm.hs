@@ -113,16 +113,15 @@ identity :: a -> Parse a
 identity a = Parse $ \s -> Right (a, s)
 
 parse :: Parse a -> L.ByteString -> Either String a
-parse parser state =
-  case runParse parser (ParseState state 0) of
+parse parser rawState =
+  case runParse parser (ParseState rawState 0) of
     Left err          -> Left err
     Right (result, _) -> Right result
 
 -- parse (identity 1) $ L8.pack ""
 
 modifyOffset :: ParseState -> Int64 -> ParseState
-modifyOffset state newOffset =
-  state { offset = newOffset }
+modifyOffset parseState newOffset = parseState { offset = newOffset }
 
 -- let before = ParseState (L8.pack "foo") 0
 -- let after = modifyOffset before 3
@@ -136,16 +135,16 @@ parseByte =
   getState ==>> parseSingleByte
 
 parseSingleByte :: ParseState -> Parse Word8
-parseSingleByte state = 
-  case L.uncons (string state) of
+parseSingleByte parseState = 
+  case L.uncons (string parseState) of
     Nothing                 -> bail "no more input"
-    Just (byte, remainder)  -> p' byte remainder state
+    Just (byte, remainder)  -> p' byte remainder parseState
 
 p' :: Word8 -> L.ByteString -> ParseState -> Parse Word8
-p' byte remainder state = putState newState ==>>> \_ -> identity byte
+p' byte remainder parseState = putState newState ==>>> \_ -> identity byte
   where 
-    newState  = state { string = remainder, offset = newOffset }
-    newOffset = offset state + 1 
+    newState  = parseState { string = remainder, offset = newOffset }
+    newOffset = offset parseState + 1 
 
 getState :: Parse ParseState
 getState = Parse $ \s -> Right (s, s)
@@ -170,12 +169,12 @@ firstParse ==> secondParser =
 
 parserChainBuilder :: Parse a -> (a -> Parse a1) -> 
                           ParseState -> Either String (a1, ParseState)
-parserChainBuilder firstParse secondParser state = 
-  case runParse firstParse state of
+parserChainBuilder firstParse secondParser parseState = 
+  case runParse firstParse parseState of
     Left errMessage ->
       Left errMessage
-    Right (firstResult, newState) ->
-      runParse (secondParser firstResult) newState
+    Right (firstResult, newParseState) ->
+      runParse (secondParser firstResult) newParseState
 
 -- main = putStr $ show $ parse parseByte $ L8.pack "P5"
 -- parse parseByte $ L8.pack "P5  1 2 200 321"
@@ -187,6 +186,15 @@ instance Functor Parse where
 -- :step parse parseByte $ L8.pack "P5"
 -- :set stop :list
 
+-- parse parseByte L.empty
+-- parse (fmap id parseByte) L.empty
 
-  
+ :t runParse getState $ ParseState {string = L8.pack "", offset = 0}
+ :t parseSingleByte ParseState {string = L8.pack "", offset = 0}
+
+
+runParse $ parseSingleByte ParseState {string = L8.pack "", offset = 0} ParseState {string = L8.pack "", offset = 0} 
+ (runParse $ (parseSingleByte ParseState {string = L8.pack "", offset = 0})) ParseState {string = L8.pack "", offset = 0}
+
+ (runParse $ (parseSingleByte ParseState {string = L8.pack "P", offset = 0})) ParseState {string = L8.pack "P", offset = 0}
 
