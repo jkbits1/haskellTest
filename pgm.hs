@@ -133,19 +133,19 @@ bail err = Parse $
 
 parseByte :: Parse Word8
 parseByte = 
-  getState ==> parseSingleByte
+  getState ==>> parseSingleByte
 
 parseSingleByte :: ParseState -> Parse Word8
 parseSingleByte state = 
-  -- \state ->
-      case L.uncons (string state) of
-        Nothing -> bail "no more input"
-        Just (byte, remainder) ->
-          putState newState ==>> \_ ->
-          identity byte
-          where 
-            newState  = state { string = remainder, offset = newOffset }
-            newOffset = offset state + 1 
+  case L.uncons (string state) of
+    Nothing                 -> bail "no more input"
+    Just (byte, remainder)  -> p' byte remainder state
+
+p' :: Word8 -> L.ByteString -> ParseState -> Parse Word8
+p' byte remainder state = putState newState ==>>> \_ -> identity byte
+  where 
+    newState  = state { string = remainder, offset = newOffset }
+    newOffset = offset state + 1 
 
 getState :: Parse ParseState
 getState = Parse $ \s -> Right (s, s)
@@ -153,15 +153,17 @@ getState = Parse $ \s -> Right (s, s)
 putState :: ParseState -> Parse ()
 putState s = Parse $ \_ -> Right ((), s)
 
--- (==>) :: Parse a -> (a -> Parse b) -> Parse b
-(==>) :: Parse ParseState -> (ParseState -> Parse Word8) -> Parse Word8
-firstParse ==> secondParser =
-  Parse parserChain 
-    where
-      parserChain = parserChainBuilder firstParse secondParser
-
-(==>>) :: Parse () -> (() -> Parse Word8) -> Parse Word8
+-- type signature works for parseSingleByte
+(==>>) :: Parse ParseState -> (ParseState -> Parse Word8) -> Parse Word8
 firstParse ==>> secondParser =
+  firstParse ==> secondParser
+
+(==>>>) :: Parse () -> (() -> Parse Word8) -> Parse Word8
+firstParse ==>>> secondParser =
+  firstParse ==> secondParser
+
+(==>) :: Parse a -> (a -> Parse b) -> Parse b
+firstParse ==> secondParser =
   Parse parserChain 
     where
       parserChain = parserChainBuilder firstParse secondParser
@@ -175,12 +177,15 @@ parserChainBuilder firstParse secondParser state =
     Right (firstResult, newState) ->
       runParse (secondParser firstResult) newState
 
-main = putStr $ show $ parse parseByte $ L8.pack "P5"
+-- main = putStr $ show $ parse parseByte $ L8.pack "P5"
 -- parse parseByte $ L8.pack "P5  1 2 200 321"
+
+instance Functor Parse where
+  fmap f parser = parser ==> \result ->
+    identity (f result)
 
 -- :step parse parseByte $ L8.pack "P5"
 -- :set stop :list
-
 
 
   
