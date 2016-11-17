@@ -1,6 +1,6 @@
 import qualified Data.ByteString.Lazy.Char8 as L8
 import qualified Data.ByteString.Lazy as L
-import Data.Char (isSpace)
+import Data.Char (isSpace, chr)
 import Data.Int (Int64)
 import Data.Word (Word8)
 
@@ -189,12 +189,89 @@ instance Functor Parse where
 -- parse parseByte L.empty
 -- parse (fmap id parseByte) L.empty
 
- :t runParse getState $ ParseState {string = L8.pack "", offset = 0}
- :t parseSingleByte ParseState {string = L8.pack "", offset = 0}
+--  :t runParse getState $ ParseState {string = L8.pack "", offset = 0}
+--  :t parseSingleByte ParseState {string = L8.pack "", offset = 0}
 
 
-runParse $ parseSingleByte ParseState {string = L8.pack "", offset = 0} ParseState {string = L8.pack "", offset = 0} 
- (runParse $ (parseSingleByte ParseState {string = L8.pack "", offset = 0})) ParseState {string = L8.pack "", offset = 0}
+-- (runParse $ (parseSingleByte ParseState {string = L8.pack "", offset = 0})) ParseState {string = L8.pack "", offset = 0}
 
- (runParse $ (parseSingleByte ParseState {string = L8.pack "P", offset = 0})) ParseState {string = L8.pack "P", offset = 0}
+-- (runParse $ (parseSingleByte ParseState {string = L8.pack "P", offset = 0})) ParseState {string = L8.pack "P", offset = 0}
+
+w2c :: Word8 -> Char
+w2c = chr . fromIntegral
+
+parseChar :: Parse Char
+parseChar = w2c <$> parseByte
+
+-- getState :: Parse ParseState
+peekByte :: Parse (Maybe Word8)
+peekByte = (fmap fst . L.uncons . string) <$> getState
+
+-- runParse peekByte ParseState {string = L8.empty, offset = 0}
+
+
+-- peekChar :: Parse (Maybe Char)
+-- peekChar = w2c <$> peekByte
+peekChar1 = 
+  -- case id <$> peekByte of
+  -- case runParse peekByte undefined of
+  --   Left a -> Nothing
+  --   Right a -> 
+  --     case fst a of 
+  --       Nothing -> Nothing
+  (peekCharBit <$> peekByte) where
+    peekCharBit a = w2c <$> a    
+
+peekChar2 = 
+  (fmap peekCharBit peekByte) where
+    peekCharBit a = fmap w2c a    
+
+peekChar3 = 
+  (peekCharBit <$> peekByte) where
+    peekCharBit = \a -> w2c <$> a    
+
+peekChar = (\a -> w2c <$> a) <$> peekByte 
+
+-- runParse peekChar ParseState {string = L8.pack "P", offset = 0}
+-- Right (Just 'P',ParseState {string = "P", offset = 0})
+
+peekChar' = 
+  id <$> peekByte
+
+peekChar'' :: Maybe Word8 -> Word8
+peekChar'' a = 
+  case a of 
+    Nothing -> 0
+    Just w -> w
+
+-- :t peekChar'' <$> peekByte :: Parse Word8
+testPeekChar'' = 
+  runParse (peekChar'' <$> peekByte) ParseState {string = L8.empty, offset = 0}
+
+-- :t w2c <$> peekChar'' <$> peekByte :: Parse Char
+
+peekChar''' :: Maybe Word8 -> Char
+peekChar''' a = 
+  case a of 
+    Nothing -> w2c 0
+    Just w -> w2c w
+
+-- :t peekChar''' <$> peekByte :: Parse Char
+
+peekChar'''' :: Maybe Word8 -> Maybe Char
+peekChar'''' a = 
+  case a of 
+    Nothing -> Just $ w2c 0
+    Just w -> Just $ w2c w
+
+-- :t peekChar'''' <$> peekByte :: Parse (Maybe Char)
+
+testPeekChar'''' = 
+  runParse (peekChar'''' <$> peekByte) ParseState {string = L8.empty, offset = 0}
+
+peekChar5 :: Maybe Word8 -> Maybe Char
+peekChar5 a = w2c <$> a 
+
+-- runParse (peekChar5 <$> peekByte) ParseState {string = L8.pack "P", offset = 0}
+-- Right (Just 'P',ParseState {string = "P", offset = 0})
 
