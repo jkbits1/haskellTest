@@ -209,34 +209,25 @@ peekByte = (fmap fst . L.uncons . string) <$> getState
 
 -- runParse peekByte ParseState {string = L8.empty, offset = 0}
 
-
+-- final attempt, rwh version - fmap w2c <$> peekByte
 -- peekChar :: Parse (Maybe Char)
 -- peekChar = w2c <$> peekByte
-peekChar1 = 
-  -- case id <$> peekByte of
-  -- case runParse peekByte undefined of
-  --   Left a -> Nothing
-  --   Right a -> 
-  --     case fst a of 
-  --       Nothing -> Nothing
-  (peekCharBit <$> peekByte) where
-    peekCharBit a = w2c <$> a    
-
-peekChar2 = 
-  (fmap peekCharBit peekByte) where
-    peekCharBit a = fmap w2c a    
-
-peekChar3 = 
-  (peekCharBit <$> peekByte) where
-    peekCharBit = \a -> w2c <$> a    
-
-peekChar = (\a -> w2c <$> a) <$> peekByte 
+peekChar  = (\a -> w2c <$> a) <$> peekByte 
+peekChar1 = (peekCharBit <$> peekByte)  where peekCharBit a = w2c <$> a    
+peekChar2 = (fmap peekCharBit peekByte) where peekCharBit a = fmap w2c a    
+peekChar3 = (peekCharBit <$> peekByte)  where peekCharBit = \a -> w2c <$> a    
 
 -- runParse peekChar ParseState {string = L8.pack "P", offset = 0}
 -- Right (Just 'P',ParseState {string = "P", offset = 0})
 
-peekChar' = 
-  id <$> peekByte
+peekChar5 :: Maybe Word8 -> Maybe Char
+peekChar5 a = w2c <$> a 
+
+-- runParse (peekChar5 <$> peekByte) ParseState {string = L8.pack "P", offset = 0}
+-- Right (Just 'P',ParseState {string = "P", offset = 0})
+
+peekChar' :: Parse (Maybe Word8)
+peekChar' = id <$> peekByte
 
 peekChar'' :: Maybe Word8 -> Word8
 peekChar'' a = 
@@ -269,9 +260,18 @@ peekChar'''' a =
 testPeekChar'''' = 
   runParse (peekChar'''' <$> peekByte) ParseState {string = L8.empty, offset = 0}
 
-peekChar5 :: Maybe Word8 -> Maybe Char
-peekChar5 a = w2c <$> a 
+parseWhileVerbose :: (Word8 -> Bool) -> Parse [Word8]
+parseWhileVerbose p =
+  peekByte ==> \mc ->
+    case mc of
+      Nothing -> identity []
+      Just c | p c ->
+                  parseByte ==> \b ->
+                  parseWhileVerbose p ==> \bs ->
+                  identity (b:bs)
+              | otherwise ->
+                  identity []
 
--- runParse (peekChar5 <$> peekByte) ParseState {string = L8.pack "P", offset = 0}
--- Right (Just 'P',ParseState {string = "P", offset = 0})
+-- runParse (parseWhileVerbose (\_ -> True)) ParseState {string = L8.pack "P5 1", offset = 0}
+-- Right ([80],ParseState {string = "", offset = 1})
 
