@@ -1,6 +1,6 @@
 import qualified Data.ByteString.Lazy.Char8 as L8
 import qualified Data.ByteString.Lazy as L
-import Data.Char (isSpace, chr)
+import Data.Char (isSpace, chr, isDigit)
 import Data.Int (Int64)
 import Data.Word (Word8)
 
@@ -208,10 +208,12 @@ peekByte :: Parse (Maybe Word8)
 peekByte = (fmap fst . L.uncons . string) <$> getState
 
 -- runParse peekByte ParseState {string = L8.empty, offset = 0}
+-- Right (Nothing,ParseState {string = "", offset = 0})
 
 -- final attempt, rwh version - fmap w2c <$> peekByte
 -- peekChar :: Parse (Maybe Char)
 -- peekChar = w2c <$> peekByte
+peekChar :: Parse (Maybe Char)
 peekChar  = (\a -> w2c <$> a) <$> peekByte 
 peekChar1 = (peekCharBit <$> peekByte)  where peekCharBit a = w2c <$> a    
 peekChar2 = (fmap peekCharBit peekByte) where peekCharBit a = fmap w2c a    
@@ -220,45 +222,45 @@ peekChar3 = (peekCharBit <$> peekByte)  where peekCharBit = \a -> w2c <$> a
 -- runParse peekChar ParseState {string = L8.pack "P", offset = 0}
 -- Right (Just 'P',ParseState {string = "P", offset = 0})
 
-peekChar5 :: Maybe Word8 -> Maybe Char
-peekChar5 a = w2c <$> a 
+peekCharPart :: Maybe Word8 -> Maybe Char
+peekCharPart a = w2c <$> a 
 
--- runParse (peekChar5 <$> peekByte) ParseState {string = L8.pack "P", offset = 0}
+-- runParse (peekCharPart <$> peekByte) ParseState {string = L8.pack "P", offset = 0}
 -- Right (Just 'P',ParseState {string = "P", offset = 0})
 
-peekChar' :: Parse (Maybe Word8)
-peekChar' = id <$> peekByte
+peekCharPart' :: Parse (Maybe Word8)
+peekCharPart' = id <$> peekByte
 
-peekChar'' :: Maybe Word8 -> Word8
-peekChar'' a = 
+peekCharPart'' :: Maybe Word8 -> Word8
+peekCharPart'' a = 
   case a of 
     Nothing -> 0
     Just w -> w
 
--- :t peekChar'' <$> peekByte :: Parse Word8
-testPeekChar'' = 
-  runParse (peekChar'' <$> peekByte) ParseState {string = L8.empty, offset = 0}
+-- :t peekCharPart'' <$> peekByte :: Parse Word8
+testPeekCharPart'' = 
+  runParse (peekCharPart'' <$> peekByte) ParseState {string = L8.empty, offset = 0}
 
--- :t w2c <$> peekChar'' <$> peekByte :: Parse Char
+-- :t w2c <$> peekCharPart'' <$> peekByte :: Parse Char
 
-peekChar''' :: Maybe Word8 -> Char
-peekChar''' a = 
+peekCharPart''' :: Maybe Word8 -> Char
+peekCharPart''' a = 
   case a of 
     Nothing -> w2c 0
     Just w -> w2c w
 
--- :t peekChar''' <$> peekByte :: Parse Char
+-- :t peekCharPart''' <$> peekByte :: Parse Char
 
-peekChar'''' :: Maybe Word8 -> Maybe Char
-peekChar'''' a = 
+peekCharPart'''' :: Maybe Word8 -> Maybe Char
+peekCharPart'''' a = 
   case a of 
     Nothing -> Just $ w2c 0
     Just w -> Just $ w2c w
 
--- :t peekChar'''' <$> peekByte :: Parse (Maybe Char)
+-- :t peekCharPart'''' <$> peekByte :: Parse (Maybe Char)
 
-testPeekChar'''' = 
-  runParse (peekChar'''' <$> peekByte) ParseState {string = L8.empty, offset = 0}
+testPeekCharPart'''' = 
+  runParse (peekCharPart'''' <$> peekByte) ParseState {string = L8.empty, offset = 0}
 
 parseWhileVerbose :: (Word8 -> Bool) -> Parse [Word8]
 parseWhileVerbose p =
@@ -274,4 +276,69 @@ parseWhileVerbose p =
 
 -- runParse (parseWhileVerbose (\_ -> True)) ParseState {string = L8.pack "P5 1", offset = 0}
 -- Right ([80],ParseState {string = "", offset = 1})
+
+-- runParse (parseWhileVerbose (\c -> notElem (w2c c) " \n" )) ParseState {string = L8.pack "P5 1", offset = 0}
+-- Right ([80,53],ParseState {string = " 1", offset = 2})
+
+parseWhile :: (Word8 -> Bool) -> Parse [Word8]
+parseWhile p =
+  (fmap p <$> peekByte) ==> \mp ->
+    if mp == Just True
+    then parseByte ==> \b ->
+      (b:) <$> parseWhile p
+    else identity []
+
+-- very basic implementation 
+notWhiteSpace = \c -> notElem c " \n\r\t"
+
+parseRawPGM =
+  parseWhileWith w2c notWhiteSpace ==> \header -> skipSpaces ==>&
+  assert (header == "P5") "invalid header" ==>&
+  parseNat ==>  \width    -> skipSpaces ==>&
+  parseNat ==>  \height   -> skipSpaces ==>&
+  parseNat ==>  \maxGrey  -> parseByte ==>&
+  parseBytes (width * height) ==> 
+                \bitmap   -> identity (Greymap width height maxGrey bitmap)
+
+-- runParse parseRawPGM ParseState {string = L8.pack "P5 1 2 3 123456", offset = 0}
+
+parseWhileWith :: (Word8 -> a) -> (a -> Bool) -> Parse [a]
+parseWhileWith f p = fmap f <$> parseWhile (p . f)
+
+-- runParse (parseWhileWith w2c notSeparator) ParseState {string = L8.pack "P5 1", offset = 0}
+
+parseNat :: Parse Int
+parseNat = 
+  parseWhileWith w2c isDigit ==> \digits ->
+    if null digits
+    then bail "no more input"
+    else 
+      let n = read digits
+      in 
+        if n < 0
+        then bail "integer overflow"
+        else identity n
+
+(==>&) :: Parse a -> Parse b -> Parse b
+p ==>& f = p ==> \_ -> f
+
+skipSpaces :: Parse ()
+skipSpaces = parseWhileWith w2c isSpace ==>& identity ()
+
+assert :: Bool -> String -> Parse ()
+assert True _     = identity ()
+assert False err  = bail err
+
+parseBytes :: Int -> Parse L.ByteString
+parseBytes n =
+  getState ==> \st ->
+    let n' = fromIntegral n
+        (h, t) = L.splitAt n' (string st)
+        st' = st {offset = offset st + L.length h, string = t}
+    in
+      putState st' ==>&
+        assert (L.length h == n') "end of input" ==>&
+          identity h
+
+
 
