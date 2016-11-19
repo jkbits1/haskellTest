@@ -296,11 +296,16 @@ parseRawPGM =
   assert (header == "P5") "invalid header" ==>&
   parseNat ==>  \width    -> skipSpaces ==>&
   parseNat ==>  \height   -> skipSpaces ==>&
-  parseNat ==>  parseValidGrey ==>
-                \maxGrey  -> parseByte ==>&
-                parsePixelSize maxGrey ==>
-                -- using peekByte as (expensive) no-op
-                \pixelSize -> peekByte ==>&
+  parseNat ==>  
+                -- parseValidGrey ==>
+                -- -- using peekByte as (expensive) no-op
+                -- \maxGrey -> peekByte ==>&
+                -- parsePixelSize maxGrey ==>
+                -- \pixelSize -> parseByte ==>&
+
+                parseGreyAndPixelSize ==>
+                \(maxGrey, pixelSize) -> parseByte ==>&
+
   parseBytes (width * height * pixelSize) ==> 
                 \bitmap   -> identity (Greymap width height maxGrey bitmap)
 
@@ -315,6 +320,13 @@ parsePixelSize grey =
     if grey > 255
     then identity 2
     else identity 1
+
+-- parseGreyAndPixelSize :: (Num a, Ord a) => a -> Parse a
+parseGreyAndPixelSize :: Int -> Parse (Int, Int)
+parseGreyAndPixelSize grey =
+    if grey > 255
+    then identity (grey, 2)
+    else identity (grey, 1)
 
 -- runParse parseRawPGM ParseState {string = L8.pack "P5 1 2 3 123456", offset = 0}
 
