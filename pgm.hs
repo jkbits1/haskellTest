@@ -298,13 +298,23 @@ parseRawPGM =
   parseNat ==>  \height   -> skipSpaces ==>&
   parseNat ==>  parseValidGrey ==>
                 \maxGrey  -> parseByte ==>&
-  parseBytes (width * height) ==> 
+                parsePixelSize maxGrey ==>
+                -- using peekByte as (expensive) no-op
+                \pixelSize -> peekByte ==>&
+  parseBytes (width * height * pixelSize) ==> 
                 \bitmap   -> identity (Greymap width height maxGrey bitmap)
 
+parseValidGrey :: (Num a, Ord a) => a -> Parse a
 parseValidGrey grey =
     if grey > 255
     then bail "invalid grey"
     else identity grey
+
+parsePixelSize :: Int-> Parse Int
+parsePixelSize grey =
+    if grey > 255
+    then identity 2
+    else identity 1
 
 -- runParse parseRawPGM ParseState {string = L8.pack "P5 1 2 3 123456", offset = 0}
 
