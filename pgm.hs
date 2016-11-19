@@ -296,9 +296,15 @@ parseRawPGM =
   assert (header == "P5") "invalid header" ==>&
   parseNat ==>  \width    -> skipSpaces ==>&
   parseNat ==>  \height   -> skipSpaces ==>&
-  parseNat ==>  \maxGrey  -> parseByte ==>&
+  parseNat ==>  parseValidGrey ==>
+                \maxGrey  -> parseByte ==>&
   parseBytes (width * height) ==> 
                 \bitmap   -> identity (Greymap width height maxGrey bitmap)
+
+parseValidGrey grey =
+    if grey > 255
+    then bail "invalid grey"
+    else identity grey
 
 -- runParse parseRawPGM ParseState {string = L8.pack "P5 1 2 3 123456", offset = 0}
 
