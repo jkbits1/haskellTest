@@ -1,6 +1,6 @@
 import qualified Data.ByteString.Lazy.Char8 as L8
 import qualified Data.ByteString.Lazy as L
-import Data.Char (isSpace, chr, isDigit)
+import Data.Char (isSpace, chr, isDigit, digitToInt)
 import Data.Int (Int64)
 import Data.Word (Word8)
 
@@ -309,6 +309,64 @@ parseRawPGM =
   parseBytes (width * height * pixelSize) ==> 
                 \bitmap   -> identity (Greymap width height maxGrey bitmap)
 
+-- runParse parseRawPGM ParseState {string = L8.pack "P5 1 2 3 123456", offset = 0}
+-- runParse parseRawPGM ParseState {string = L8.pack "P5 1 2 300 123456", offset = 0}
+
+parsePlainPGM =
+  parseWhileWith w2c notWhiteSpace ==> \header -> skipSpaces ==>&
+  assert (header == "P2") "invalid header" ==>&
+  parseNat ==>  \width    -> skipSpaces ==>&
+  parseNat ==>  \height   -> skipSpaces ==>&
+  parseNat ==>  parseGreyAndPixelSize ==>
+                \(maxGrey, pixelSize) -> parseByte ==>&
+  parseBytes (width * height * pixelSize) ==> 
+                \bitmap   -> identity (Greymap width height maxGrey bitmap)
+-- runParse parsePlainPGM ParseState {string = L8.pack "P2 1 2 300 123456", offset = 0}
+
+parseEitherPGM =
+  parseWhileWith w2c notWhiteSpace ==> \header -> skipSpaces ==>&
+  parseSelectParser header
+
+parseSelectParser :: String -> Parse Greymap
+parseSelectParser header =
+    if header == "P5"
+    then 
+      parseNat ==>  \width    -> skipSpaces ==>&
+      parseNat ==>  \height   -> skipSpaces ==>&
+      parseNat ==>  parseGreyAndPixelSize ==>
+                    \(maxGrey, pixelSize) -> parseByte ==>&
+      parseBytes (width * height * pixelSize) ==> 
+                    \bitmap   -> identity (Greymap width height maxGrey bitmap)
+
+    else 
+      parseNat ==>  \width    -> skipSpaces ==>&
+      parseNat ==>  \height   -> skipSpaces ==>&
+      parseNat ==>  parseGreyAndPixelSize ==>
+                    \(maxGrey, pixelSize) -> parseByte ==>&
+      parseBytes (width * height * pixelSize) ==> 
+                    \bitmap   -> identity (Greymap width height maxGrey bitmap)
+
+    -- then bail "invalid grey"
+    -- else identity grey
+
+-- runParse parseEitherPGM ParseState {string = L8.pack "P2 1 2 300 123456", offset = 0}
+-- runParse parseEitherPGM ParseState {string = L8.pack "P5 1 2 300 123456", offset = 0}
+
+
+parseEitherPGM2 =
+  parseWhileWith w2c notWhiteSpace ==> \header -> skipSpaces ==>&
+  assert ((header == "P5") || (header == "P2")) "invalid header" ==>&
+  parseNat ==>  \width    -> skipSpaces ==>&
+  parseNat ==>  \height   -> skipSpaces ==>&
+  parseNat ==>  parseGreyAndPixelSize ==>
+                \(maxGrey, pixelSize) -> parseByte ==>&
+  parseBytes (width * height * pixelSize) ==> 
+                \bitmap   -> identity (Greymap width height maxGrey bitmap)
+
+-- runParse parseEitherPGM2 ParseState {string = L8.pack "P2 1 2 300 123456", offset = 0}
+-- runParse parseEitherPGM2 ParseState {string = L8.pack "P5 1 2 300 123456", offset = 0}
+
+
 parseValidGrey :: (Num a, Ord a) => a -> Parse a
 parseValidGrey grey =
     if grey > 255
@@ -327,8 +385,6 @@ parseGreyAndPixelSize grey =
     if grey > 255
     then identity (grey, 2)
     else identity (grey, 1)
-
--- runParse parseRawPGM ParseState {string = L8.pack "P5 1 2 3 123456", offset = 0}
 
 parseWhileWith :: (Word8 -> a) -> (a -> Bool) -> Parse [a]
 parseWhileWith f p = fmap f <$> parseWhile (p . f)
@@ -369,4 +425,17 @@ parseBytes n =
           identity h
 
 
+-- parseNum :: Parse Int
+-- parseNum = 
+--   parseWhileWith w2c isChar ==> \chars ->
+--     if null chars
+--     then bail "no more input"
+--     else 
+--       let
+--         digits = map digitToInt chars 
+--         n = read digits
+--       in 
+--         if n < 0
+--         then bail "integer overflow"
+--         else identity n
 
