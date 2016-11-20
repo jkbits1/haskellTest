@@ -4,6 +4,9 @@ import Data.Char (isSpace, chr, isDigit, digitToInt)
 import Data.Int (Int64)
 import Data.Word (Word8)
 
+import Control.Applicative
+import Control.Monad (liftM, ap)
+
 data Greymap = Greymap {
   greyWidth :: Int
 , greyHeight :: Int
@@ -178,10 +181,6 @@ parserChainBuilder firstParse secondParser parseState =
 
 -- main = putStr $ show $ parse parseByte $ L8.pack "P5"
 -- parse parseByte $ L8.pack "P5  1 2 200 321"
-
-instance Functor Parse where
-  fmap f parser = parser ==> \result ->
-    identity (f result)
 
 -- :step parse parseByte $ L8.pack "P5"
 -- :set stop :list
@@ -438,4 +437,21 @@ parseBytes n =
 --         if n < 0
 --         then bail "integer overflow"
 --         else identity n
+
+instance Monad Parse where
+  return = identity
+  (>>=) = (==>)
+  fail = bail
+
+instance Functor Parse where
+  fmap f parser = parser ==> \result ->
+    identity (f result)
+
+-- instance Functor Parse where
+--   fmap = liftM
+
+instance Applicative Parse where
+  pure = return
+  (<*>) = ap
+
 
