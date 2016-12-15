@@ -16,10 +16,14 @@ record :: String -> Logger ()
 globToRegex :: String -> Logger String
 globToRegex cs =
   globToRegex' cs >>= \ds ->
+    -- jk addition
+    record "start" >>
     return ('^':ds)
 
 globToRegex' :: String -> Logger String
-globToRegex' "" = return "$"
+  -- jk addition
+-- globToRegex' "" = return "$"
+globToRegex' "" = record "end" >> return "$"
 globToRegex' ('?':cs) =
   record "any" >>
   globToRegex' cs >>= \ds ->
@@ -54,7 +58,9 @@ charClass (c:cs) = (c:) `liftM` charClass cs
 escape :: Char -> Logger String
 escape c
   | c `elem` regexChars = record "escape" >> return ['\\', c]
-  | otherwise           = return [c]
+  -- | otherwise           = return [c]
+  -- jk addition
+  | otherwise           = record "letter" >> return [c]
   where regexChars = "\\+()^$.{}]|"
 
 newtype Logger a = Logger { execLogger :: (a, Log) }
