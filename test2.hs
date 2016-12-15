@@ -84,5 +84,23 @@ subjectTitle (title, _) = title
 subjectDesc :: (t, t1) -> t1
 subjectDesc  (_, desc)  = desc
 
-filterSync :: Eq a => a -> (a, b) -> Bool
+filterSync :: Eq a => a -> (a, a) -> Bool
 filterSync title subj = title == subjectTitle subj
+
+filterSubjects :: Eq a => a -> [(a,a)] -> [(a,a)]
+filterSubjects title = filter (filterSync title)
+
+firstFilteredSubject :: Eq a => a -> [(a, a)] -> (a, a)
+firstFilteredSubject title xs = head (filterSubjects title xs)
+
+filterSubjects2 :: Eq a => a -> [(a,a)] -> [(a,a)]
+filterSubjects2 = filter . filterSync 
+
+firstFilteredSubject2 :: Eq a => a -> [(a, a)] -> (a, a)
+firstFilteredSubject2 title = head . (filterSubjects2 title)
+
+syncSubject :: [Char] -> ([Char], [Char])
+syncSubject title = firstFilteredSubject2 title subjects
+
+titlesList titles = map syncSubject titles
+

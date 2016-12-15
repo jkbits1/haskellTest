@@ -8,10 +8,19 @@ strPermPart [] = []
 strPermPart s = (head $ tail s) : head s : []
 
 strPerm [] = []
-strPerm s = (strPermPart $ take 2 s) ++ (strPermPart $ drop 2 s)
+strPerm s = (strPermPart $ take 2 s) ++ (strPerm $ drop 2 s)
 
 getLines :: Int -> IO [String]
 getLines n = sequence $ replicate n getLine
+
+main1 = 
+  do
+    lineCount <- readLn :: IO Int
+    lines <- getLines lineCount
+    let permLines = map strPerm lines
+    putStrLn $ unlines permLines
+--    sequence_ $ map putStrLn permLines
+--    return ()
 
 --mainX = do
 --    input1 <- getLine :: IO String
@@ -29,7 +38,18 @@ mainX =
       else
         return ()
     
-    
+mainX2 :: Int -> IO ()
+mainX2 count =
+  do
+    putStrLn "Continue?"
+    response <- getYnMax count
+    let yn = fst(response)
+    let newCount = snd(response)
+    if newCount < 3 && yn == True
+      then
+        mainX2 $ newCount
+      else
+        return ()  
 
 getYN :: IO Bool
 getYN = 
@@ -40,7 +60,19 @@ getYN =
         return True
       else
         return False
-        
+
+
+getYnMax :: Int -> IO (Bool, Int)
+getYnMax n = 
+  do 
+    let nextCount = n+1
+    answer <- getLine
+    if answer == "y"
+      then
+        return (True, nextCount)
+      else
+        return (False, nextCount)
+
 
 
 -- pt :: Int -> Int -> Int
