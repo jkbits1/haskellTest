@@ -65,6 +65,13 @@ record s = Logger ((), [s])
 
 instance Monad Logger where
   return a = Logger (a, [])
+  -- (>>=) :: Logger a -> (a -> Logger b) -> Logger b
+  m >>= k = 
+    let (a, w)  = execLogger m
+        n       = k a
+        (b, x)  = execLogger n
+    in 
+      Logger (b, w ++ x)
 
 instance Functor Logger where
   fmap = liftM
