@@ -29,6 +29,19 @@ carriers = M.fromList $ [(Network1, "high st"), (Network2, "main st")]
 
 test = findCarrierBillingAddress "Bill" customers numbers carriers
 
+findCarrierBillingAddress2 :: PersonName
+  -> M.Map PersonName PhoneNumber
+  -> M.Map PhoneNumber MobileCarrier
+  -> M.Map MobileCarrier BillingAddress
+  -> Maybe BillingAddress
 
+findCarrierBillingAddress2 person phoneMap carrierMap addressMap =
+  M.lookup person phoneMap >>= \num ->
+    -- return num
+    M.lookup num carrierMap >>= \carrier ->
+      -- return $ show carrier
+      M.lookup carrier addressMap
+
+test2 = findCarrierBillingAddress2 "Bill" customers numbers carriers
 
 
