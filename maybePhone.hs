@@ -40,8 +40,45 @@ findCarrierBillingAddress2 person phoneMap carrierMap addressMap =
     -- return num
     M.lookup num carrierMap >>= \carrier ->
       -- return $ show carrier
-      M.lookup carrier addressMap
+      -- either
+      -- M.lookup carrier addressMap
+      -- or
+      M.lookup carrier addressMap >>= \address ->
+        return address
 
 test2 = findCarrierBillingAddress2 "Bill" customers numbers carriers
 
+findCarrierBillingAddress3 :: PersonName
+  -> M.Map PersonName PhoneNumber
+  -> M.Map PhoneNumber MobileCarrier
+  -> M.Map MobileCarrier BillingAddress
+  -> Maybe BillingAddress
+
+findCarrierBillingAddress3 person phoneMap carrierMap addressMap = do
+    num <- M.lookup person phoneMap
+    -- return num
+    carrier <- M.lookup num carrierMap
+    -- return $ show carrier
+    -- either
+    -- M.lookup carrier addressMap
+    -- or
+    address <- M.lookup carrier addressMap
+    return address
+
+test3 = findCarrierBillingAddress3 "Bill" customers numbers carriers
+
+findCarrierBillingAddress4 :: PersonName
+  -> M.Map PersonName PhoneNumber
+  -> M.Map PhoneNumber MobileCarrier
+  -> M.Map MobileCarrier BillingAddress
+  -> Maybe BillingAddress
+
+-- chain on single line
+findCarrierBillingAddress4 person phoneMap carrierMap addressMap =
+    flookup phoneMap person >>= flookup carrierMap >>= flookup addressMap   
+    where 
+      flookup :: Ord k => M.Map k a -> k -> Maybe a
+      flookup = flip M.lookup
+
+test4 = findCarrierBillingAddress4 "Bill" customers numbers carriers
 
