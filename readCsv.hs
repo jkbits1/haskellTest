@@ -11,8 +11,17 @@ main = showCsv
 -- misc functions with do syntax
 fileLines :: IO [String]
 fileLines = do 
-  ls <- readFile fileName
-  return $ lines ls
+  contents <- readFile fileName
+  return $ lines contents
+
+-- ignore field headings line
+dataLines :: IO [String]
+dataLines = do 
+  contents <- readFile fileName
+  return $ drop 1 $ lines contents
+
+dataLines' = liftM (\cs -> drop 1 $ lines cs) $ readFile fileName
+dataLines'' = liftM (drop 1 . lines) $ readFile fileName
 
 lineCount :: IO Int
 lineCount = do
@@ -52,11 +61,16 @@ specificLineCoId' n = do
   coId <- liftM (\ls -> head . drop 1 $ splitOn "," $ (!!n) ls) fileLines
   return coId
 
+specificLineCoId'''' n = do
+  coId <- liftM (head . drop 1 . splitOn "," . (!!n)) fileLines
+  return coId
+
 lineField f line = head . drop f $ splitOn "," line
 lineCoId line = head . drop 1 $ splitOn "," line
 
 specificLineField f n xs = head . drop f $ splitOn "," $ (!!n) xs
-specificLineField' f n xs = lineField f $ (!!n) xs
+specificLineField' f n = head . drop f . splitOn "," . (!!n)
+specificLineField'' f n xs = lineField f $ (!!n) xs
 
 -- doesn't compile
 -- specificLineField' f n = head . drop f $ splitOn "," $ (!!n)
@@ -74,9 +88,27 @@ specificLineCoId''' n = do
   liftM (specLineCoId n) fileLines >>= \coId -> 
     return coId
 
+coId' line = read $ lineCoId line :: Int
 
-coLines = do
-  lines <- fileLines
-  return $ filter (\line -> lineCoId line == "4" ) lines 
+coIds = do
+  -- let coId line = read $ lineCoId line :: Int
+  lines <- dataLines
+  -- return $ map (\line -> lineCoId line) lines 
+  return $ map lineCoId lines 
+
+-- coIds' = do
+--   return $ mapM lineCoId dataLines 
+
+coLines n = do
+  -- let coId line = read $ lineCoId line :: Int
+  lines <- dataLines
+  -- return $ filter (\line -> lineCoId line == "4" ) lines 
+  return $ filter (\line -> n == (coId' line) ) lines 
+
+-- ghci test code
+-- liftM (\l -> read $ lineCoId l :: Int) $ specificLine' 1
+
+
+
 
 
