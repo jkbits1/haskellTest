@@ -3,7 +3,7 @@ module StreamImp (SImp) where
 
   -- data MergeSort a = MS Int [[a]] -- MS size segs
   -- data StreamCell a = Nil | Cons (a) (StreamCell a)
-  data SImp a = Nil | Cons (a) (SImp a)
+  data SImp a = Nil | Cons (a) (SImp a) deriving (Show)
   -- data SImp a = SI [a] [a] deriving (Show)
   -- data QBatched a = BQ [Int] [Int] deriving (Show)
 
@@ -40,5 +40,16 @@ module StreamImp (SImp) where
       in 
         reverse' s Nil
 
+-- test code
 
+-- Cons 1 Nil
+-- Cons 2 $ Cons 1 Nil
+-- Cons 3 $ Cons 2 $ Cons 1 Nil
 
+-- Stream.take 1 $ Cons 2 $ Cons 1 Nil
+-- Stream.drop 1 $ Cons 2 $ Cons 1 Nil
+-- Stream.reverse $ Cons 2 $ Cons 1 Nil
+
+-- Stream.reverse $ Cons 3 $ Cons 2 $ Cons 1 Nil
+-- Stream.take 1 $ Cons 3 $ Cons 2 $ Cons 1 Nil
+-- Stream.drop 1 $ Cons 3 $ Cons 2 $ Cons 1 Nil
