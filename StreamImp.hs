@@ -17,40 +17,12 @@ module StreamImp (SImp) where
 
 
   instance Stream SImp where
-    -- empty = BQ [] []
-
-    -- isEmpty (BQ f r)  = length f == 0
-
-    -- queue (BQ [] r)   = BQ (reverse r) []
-    -- queue (BQ f  r)   = BQ f r
-
-    -- snoc (BQ f r) x   = BQ f (x:r)
-
-    -- hdq (BQ [] _)     = head [] -- intended to cause exception
-    -- hdq (BQ (x:f) _)  = x
-
-    -- tlq (BQ [] _)     = BQ (tail []) [] -- intended to cause exception
-    -- tlq (BQ (x:f) r)  = queue (BQ f r)
-
-    -- take 0 _ = null
-
---     -- empty   :: q a
---     -- isEmpty :: q a -> Bool
-
---     -- cons    :: a -> q a -> q a
---     -- hdq     :: q a -> a
---     -- tlq     :: q a -> q a
-
---     -- snoc    :: q a -> a -> q a
---     -- last    :: q a -> a
---     -- init    :: q a -> q a
 
 --     append  :: s a -> s a -> s a
     append Nil t = t
     append (Cons x s) t = Cons x (Stream.append s t)
     
     -- take    :: Stream s => Int -> s a -> s a
-    -- take :: Stream s => Int -> s a -> s a
     take 0 _ = Nil
     take _ Nil = Nil
     take n (Cons x s) = Cons x $ Stream.take (n - 1) s
@@ -69,23 +41,4 @@ module StreamImp (SImp) where
         reverse' s Nil
 
 
--- working from pdf
 
--- module Stream (Stream(..)) where 
---   class Stream s where
---     -- empty   :: q a
---     -- isEmpty :: q a -> Bool
-
---     -- cons    :: a -> q a -> q a
---     -- hdq     :: q a -> a
---     -- tlq     :: q a -> q a
-
---     -- snoc    :: q a -> a -> q a
---     -- last    :: q a -> a
---     -- init    :: q a -> q a
-
---     append  :: s a -> s a -> s a
-    
---     take    :: Int -> s a -> s a
---     drop    :: Int -> s a -> s a
---     reverse :: s a -> s a
