@@ -106,20 +106,30 @@ gR2''' =
 --   in 
 --     get >>= f
   
--- gR = 
---   let
---   <- get      
-
--- getRandom' = 
---   do 
---     gen <- get
---     -- let (val, gen') = random gen
---     -- put gen'
---     -- return val
---     return gen
+-- NOTE: first version using do syntax, was correct but
+--       doesn't compile without type signature  
+-- work
+getRandom' :: Random a => RandomState a
+-- getRandom' :: Random a => State StdGen a
+-- don't work
+-- getRandom' :: Random a => State m a
+-- getRandom' :: State StdGen a
+getRandom' = 
+  do 
+    -- gen <- get :: MonadState s m => m s
+    gen <- get :: MonadState s m => m s
+    let (val, gen') = random gen :: Random a => (a, StdGen)
+    put gen'
+    return val
 
 getTwoRandoms :: Random a => RandomState (a, a)
 getTwoRandoms = liftM2 (,) getRandom getRandom
 
+-- twoRunRandoms :: IO (Int, Int)
+twoRunRandoms = do
+  oldState <- getStdGen :: IO StdGen
+  let (result, newState) = runState getTwoRandoms oldState
+  setStdGen newState :: IO ()
+  return result :: IO (Double, Double)
 
 -- :m +System.Random
