@@ -1,6 +1,7 @@
 import System.Random
 import Control.Monad.State
 
+-- based on real world haskell code
 -- also worth a look
 -- https://wiki.haskell.org/State_Monad
 
@@ -75,6 +76,14 @@ grb (val, gen') =
     put gen'
     return val
 
+-- NOTE: added a little later
+grb'' :: MonadState s m => (b, s) -> m b
+grb'' (val, gen') = 
+  put gen' >>= \_ ->
+    return val
+
+
+
 gR2' :: Random a => RandomState a
 gR2' = 
   do 
@@ -95,6 +104,13 @@ gR2''' =
     let (val, gen') = random gen
     put gen'
     return val    
+
+gR2'''' :: Random a => RandomState a
+gR2'''' = 
+  do 
+    gen <- get
+    grb'' (random gen)
+
 
 -- gr' = 
 --   let f gen = 
@@ -125,10 +141,14 @@ getRandom' =
 getTwoRandoms :: Random a => RandomState (a, a)
 getTwoRandoms = liftM2 (,) getRandom getRandom
 
+getTwoRandoms' :: Random a => RandomState (a, a)
+getTwoRandoms' = liftM2 (,) gR2'''' gR2''''
+
 -- twoRunRandoms :: IO (Int, Int)
 twoRunRandoms = do
   oldState <- getStdGen :: IO StdGen
-  let (result, newState) = runState getTwoRandoms oldState
+  -- let (result, newState) = runState getTwoRandoms oldState
+  let (result, newState) = runState getTwoRandoms' oldState
   setStdGen newState :: IO ()
   return result :: IO (Double, Double)
 
