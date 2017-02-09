@@ -77,17 +77,18 @@ playGameMini''' (x:[]) =
 playGameMini'''' (x:[]) =
   get >>=
     (\(on, score) ->
-      -- do
       (case x of 
         'c'       -> 
-          put (not on, score)) >>= (\_ -> 
-
-        -- finish part
-        get >>= 
-          (\(_, score) -> 
-            return score :: State GameState GameValue)
+          put (not on, score)) >>= 
+            (\_ -> 
+              get >>= 
+                (\(_, score) -> 
+                  return score :: State GameState GameValue)
             )
     )
+
+-- runState (playGameMini'''' "c") startState
+
 
 playGameMini''''' (x:[]) =
   get >>=
