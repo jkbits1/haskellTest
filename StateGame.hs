@@ -5,6 +5,15 @@ import Control.Monad.State
 type GameValue = Int
 type GameState = (Bool, Int)
 
+startState :: GameState
+startState = (False, 0)
+
+-- runState (playGame "") startState
+-- runState (playGame "c") startState
+
+-- runState (playGame "ca") startState
+-- runState (playGame "cac") startState
+
 playGame :: String -> State GameState GameValue
 playGame [] = do
   (_, score) <- get
@@ -17,14 +26,53 @@ playGame (x:xs) = do
     'c'       -> put (not on, score)
   playGame xs
 
-startState :: GameState
-startState = (False, 0)
+playGame' :: String -> State GameState GameValue
+playGame' [] = 
+  get >>= 
+    (\(_, score) -> 
+      return score :: State GameState GameValue)
 
--- runState (playGame "") startState
--- runState (playGame "c") startState
+playGame' (x:xs) = do
+  (on, score) <- get
+  case x of 
+    'a' | on  -> put (on,     score + 1)
+    'c'       -> put (not on, score)
+  playGame' xs
 
--- runState (playGame "ca") startState
--- runState (playGame "cac") startState
+playGame'' [] = 
+  get >>= 
+    (\(_, score) -> 
+      return score :: State GameState GameValue
+    )
+
+playGame'' (x:xs) = do
+  get >>=
+    (\(on, score) ->
+      (case x of 
+        'c'       -> put (not on, score)
+      ) >>= 
+        (\_ -> 
+          playGame'' xs
+        )
+    )
+
+playGameToggle [] = 
+  get >>= 
+    (\(_, score) -> 
+      return score :: State GameState GameValue
+    )
+
+playGameToggle (x:xs) = do
+  get >>=
+    (\(on, score) ->
+      put (not on, score)
+        >>= (\_ -> playGame'' xs)
+    )
+
+pgmBit =
+  get >>= 
+    (\(_, score) -> 
+      return score :: State GameState GameValue)
 
 playGameMini (x:[]) = do
   (on, score) <- get
@@ -42,11 +90,6 @@ playGameMini' (x:[]) = do
 
   -- finish part
   pgmBit
-
-pgmBit =
-  get >>= 
-    (\(_, score) -> 
-      return score :: State GameState GameValue)
 
 playGameMini'' (x:[]) =
   get >>=
@@ -79,12 +122,14 @@ playGameMini'''' (x:[]) =
     (\(on, score) ->
       (case x of 
         'c'       -> 
-          put (not on, score)) >>= 
-            (\_ -> 
-              get >>= 
-                (\(_, score) -> 
-                  return score :: State GameState GameValue)
+          put (not on, score)
+      ) >>= 
+        (\_ -> 
+          get >>= 
+            (\(_, score) -> 
+              return score :: State GameState GameValue
             )
+        )
     )
 
 -- runState (playGameMini'''' "c") startState
@@ -101,3 +146,14 @@ playGameMini''''' (x:[]) =
           pgmBit
   )
 
+playGameMiniTest (x:[]) =
+  get >>=
+    (\(on, score) ->
+      put (not on, score) >>= 
+        (\_ -> 
+          get >>= 
+            (\(_, score) -> 
+              return score :: State GameState GameValue
+            )
+        )
+    )
