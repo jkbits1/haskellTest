@@ -69,7 +69,7 @@ lineField f line = head . drop f $ splitOn "," line
 lineCoId line = head . drop 1 $ splitOn "," line
 
 specificLineField f n xs = head . drop f $ splitOn "," $ (!!n) xs
-specificLineField' f n = head . drop f . splitOn "," . (!!n)
+specificLineField' fno line = head . drop fno . splitOn "," . (!!line)
 specificLineField'' f n xs = lineField f $ (!!n) xs
 
 -- doesn't compile
@@ -88,6 +88,7 @@ specificLineCoId''' n = do
   liftM (specLineCoId n) fileLines >>= \coId -> 
     return coId
 
+-- convert company id field to Int
 coId' line = read $ lineCoId line :: Int
 
 coIds = do
@@ -99,8 +100,8 @@ coIds = do
 -- coIds' = do
 --   return $ mapM lineCoId dataLines 
 
+coLines :: Int -> IO [String]
 coLines n = do
-  -- let coId line = read $ lineCoId line :: Int
   lines <- dataLines
   -- return $ filter (\line -> lineCoId line == "4" ) lines 
   return $ filter (\line -> n == (coId' line) ) lines 
@@ -108,7 +109,28 @@ coLines n = do
 -- ghci test code
 -- liftM (\l -> read $ lineCoId l :: Int) $ specificLine' 1
 
+-- liftM length $ coLines 29
+-- liftM head $ coLines 29
 
+-- liftM (head . drop 1) $ coLines 29
+--  appendFile "./t.csv" "123"
+
+-- liftM (appendFile "./t.csv" . head . drop 1) $ coLines 29
+-- liftM (show . head . drop 1) $ coLines 29
+
+-- (appendFile "./t.csv" . head . drop 1) ["", "xyz"]
+
+writeCoLines n = do
+  lines <- coLines n
+  -- return $ map (\l -> show l) lines
+  -- mapM_ (\l -> appendFile "./t.csv" l) lines
+  mapM_ (appendFile ("./t" ++ (show n :: String) ++ ".csv")) lines
+
+writeCoLine n line = do
+  lines <- coLines n
+  -- return $ map (\l -> show l) lines
+  -- mapM_ (\l -> appendFile "./t.csv" l) lines
+  (appendFile ("./t" ++ (show n :: String) ++ ".csv") . head. drop line) lines
 
 
 
