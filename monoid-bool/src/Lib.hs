@@ -2,7 +2,8 @@ module Lib
   ( someFunc,
     numAnd,
     NAnd,
-    BAnd
+    BAnd,
+    BOr
   ) where
 
 someFunc :: IO ()
@@ -46,6 +47,15 @@ instance Monoid (BAnd) where
 -- BAnd True `mappend` BAnd True
 -- BAnd {unBAnd = True}
 
+-- :m +Data.Monoid
+-- BAnd True <> BAnd True
+-- BAnd {unBAnd = True}
+
+-- mconcat [BAnd True, BAnd True, BAnd False]
+-- BAnd {unBAnd = False}
+-- mconcat [BAnd True, BAnd True, BAnd True]
+-- BAnd {unBAnd = True}
+
 newtype BOr = BOr { unBor :: Bool } deriving Show
 
 instance Monoid BOr where
@@ -55,3 +65,11 @@ instance Monoid BOr where
 -- BOr False `mappend` BOr True
 -- BOr {unBor = True}
 
+-- :m +Data.Monoid
+-- BOr False <> BOr True
+-- BOr {unBor = True}
+
+-- mconcat [BOr True, BOr True, BOr False]
+-- BOr {unBOr = True}
+-- mconcat [BOr False, BOr False, BOr False]
+-- BOr {unBOr = False}
